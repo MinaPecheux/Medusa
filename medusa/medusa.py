@@ -30,8 +30,7 @@ import argparse
 import shutil
 import getpass
 import sys
-from os import listdir, makedirs
-from os.path import exists
+import os
 from time import sleep
 
 from .utils import ShellColors, ALPHABET, V_TABLES
@@ -40,8 +39,9 @@ from .utils import ShellColors, ALPHABET, V_TABLES
 def parse_args(args):
     parsed = dict(
         input=args.input,
-        type=args.type,
+        output=args.output,
         action=args.action,
+        zip=args.zip,
         verbose=args.verbose
     )
     return parsed
@@ -146,99 +146,80 @@ class Medusa(object):
         '''
         if self.verbose: print ('')
         input_name = args['input']
+        input_type = 'dir' if os.path.isdir(input_name) else 'file'
 
         # if acting on FILE
-        if args['type'] == 'file':
+        if input_type == 'file':
             # read file
             if self.verbose: print ('Reading file.')
 
             with open(input_name, mode='r') as FILE_READ:
                 content = FILE_READ.read()
 
-            tmp = input_name.split('.')
             # encryption
             if args['action'] == 'encode':
                 # write encoded file
                 if self.verbose: print ('Encrypting.')
-                with open(tmp[0] + '_m.' + tmp[1], mode='w') as FILE_WRITE:
+                with open(args['output'], mode='w') as FILE_WRITE:
                     FILE_WRITE.write(self.encode(content))
             # decryption
             elif args['action'] == 'decode':
                 # write decoded file
                 if self.verbose: print ('Decrypting.')
-                with open(tmp[0][:-2] + '.' + tmp[1], mode='w') as FILE_WRITE:
+                with open(args['output'], mode='w') as FILE_WRITE:
                     FILE_WRITE.write(self.decode(content))
 
         # else if acting on DIRECTORY
-        elif args['type'] == 'dir' or args['type'] == 'dirzip':
+        elif input_type == 'dir':
+            # prepare output dir if need be
+            if not os.path.exists(args['output']):
+                os.makedirs(args['output'])
+
+            if self.verbose: print ('')
+
             # get directory files
             if self.verbose: print ('Reading files from directory.')
-            files = [f for f in listdir(input_name)]
+            files = [ f for f in os.listdir(input_name) ]
 
-            # encryption
-            if args['action'] == 'encode':
-                # add encoding marker
-                if not exists(input_name + '_m'):
-                    makedirs(input_name + '_m')
+            # go through files in directory
+            for f in files:
+                if f.startswith('.'):
+                    continue
 
-                if self.verbose: print ('')
-                # go through files in directory
-                for f in files:
-                    if f.startswith('.'):
-                        continue
-
+                if args['action'] == 'encode':
                     sys.stdout.write('\rEncrypting... (%d/%d)' % (files.index(f) + 1, len(files)))
-                    sys.stdout.flush()
-                    # read decoded file
-                    with open(input_name + '/' + f, mode='r') as FILE_READ:
-                        content = FILE_READ.read()
-
-                    # write encoded file
-                    with open(input_name + '_m/' + f, mode='w') as FILE_WRITE:
-                        FILE_WRITE.write(self.encode(content))
-
-                    sleep(0.1)
-
-                if self.verbose: print ('')
-                # if asked, zip the resulting directory
-                if args['type'] == 'dirzip':
-                    if self.verbose: print ('Zipping encrypted directory.')
-                    shutil.make_archive(input_name + '_m', 'zip', input_name + '_m')
-
-            # decryption
-            if args['action'] == 'decode':
-                # remove encoding marker
-                if not exists(input_name[:-2]):
-                    makedirs(input_name[:-2])
-
-                # go through files in directory
-                for f in files:
-                    if f.startswith('.'):
-                        continue
-
+                else:
                     sys.stdout.write('\rDecrypting... (%d/%d)' % (files.index(f) + 1, len(files)))
-                    sys.stdout.flush()
-                    # read encoded file
-                    with open(input_name + '/' + f, mode='r') as FILE_READ:
-                        content = FILE_READ.read()
+                sys.stdout.flush()
 
-                    # write decoded file
-                    with open(input_name[:-2] + '/' + f, mode='w') as FILE_WRITE:
+                # read input file
+                with open(os.path.join(input_name, f), mode='r') as FILE_READ:
+                    content = FILE_READ.read()
+
+                # write output file
+                with open(os.path.join(args['output'], f), mode='w') as FILE_WRITE:
+                    if args['action'] == 'encode':
+                        FILE_WRITE.write(self.encode(content))
+                    else:
                         FILE_WRITE.write(self.decode(content))
 
-                if self.verbose: print ('')
-                # if asked, zip the resulting directory
-                if args['type'] == 'dirzip':
-                    if self.verbose: print ('Zipping decrypted directory.')
-                    shutil.make_archive(input_name, 'zip', input_name)
+                sleep(0.1)
+
+            if self.verbose: print ('')
+
+            # if asked, zip the resulting directory
+            if args['zip']:
+                if self.verbose: print ('Zipping encrypted directory.')
+                shutil.make_archive(args['output'], 'zip', args['output'])
 
 
 def main():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('-i', '--input', type=str)
-    parser.add_argument('-a', '--action', type=str)
-    parser.add_argument('-t', '--type', type=str, default='file')
+    parser.add_argument('-i', '--input', type=str, required=True)
+    parser.add_argument('-o', '--output', type=str, required=True)
+    parser.add_argument('-a', '--action', type=str, required=True)
+    parser.add_argument('-z', '--zip', action='store_true')
     parser.add_argument('-v', '--verbose', action='store_true')
 
     args = parse_args(parser.parse_args())
@@ -259,8 +240,7 @@ def main():
     # check for overwrite problems: if decoding, ask to overwrite already existing file
     if args['action'] == 'decode':
         # if there is already a file with the decoded name
-        tmp = args['input'].split('.')
-        if exists(tmp[0][:-2] + '.' + tmp[1]):
+        if os.path.exists(args['output']):
             q = input(ShellColors.YELLOW + 'Overwrite existing data? (y/n) ' + ShellColors.ENDC)
             # if overwriting allowed
             if q == 'y':
