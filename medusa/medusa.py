@@ -105,12 +105,14 @@ class Medusa(object):
 
             # access new character of the key
             last_key_rank = key_rank
-            key_rank = (key_rank + ord(self.complement_key[complement_key_rank])) % len(self.key)
+            k = self.complement_key[complement_key_rank]
+            key_rank = (key_rank + ord(k)) % len(self.key)
 
             # if back to beginning of key
             if key_rank <= last_key_rank:
                 # access next character of complement key
-                complement_key_rank = (complement_key_rank + 1) % len(self.complement_key)
+                complement_key_rank = (complement_key_rank + 1) \
+                    % len(self.complement_key)
 
         return word_encoded
 
@@ -137,12 +139,14 @@ class Medusa(object):
 
             # access new character of the key
             last_key_rank = key_rank
-            key_rank = (key_rank + ord(self.complement_key[complement_key_rank])) % len(self.key)
+            k = self.complement_key[complement_key_rank]
+            key_rank = (key_rank + ord(k)) % len(self.key)
 
             # if back to beginning of key
             if key_rank <= last_key_rank:
                 # access next character of complement key
-                complement_key_rank = (complement_key_rank + 1) % len(self.complement_key)
+                complement_key_rank = (complement_key_rank + 1) \
+                    % len(self.complement_key)
 
         return word_decoded
 
@@ -169,7 +173,7 @@ class Medusa(object):
 
         # read file
         if self.verbose:
-            print ('\n{}> {}'.format(ind, os.path.basename(input_path)))
+            print('\n{}> {}'.format(ind, os.path.basename(input_path)))
 
         with open(input_path, 'r') as FILE_READ:
             content = FILE_READ.read()
@@ -235,14 +239,14 @@ class Medusa(object):
             os.makedirs(output_path)
 
         dir_name = os.path.basename(input_path)
-        print ('')
+        print('')
 
         # get directory files
         if self.verbose:
             log = 'Reading files from directory: "{}"'.format(dir_name)
-            print (ind + log)
-            print (ind + '-' * len(log))
-        files = [ f for f in os.listdir(input_path) ]
+            print(ind + log)
+            print(ind + '-' * len(log))
+        files = [f for f in os.listdir(input_path)]
 
         # go through files in directory
         for f in files:
@@ -253,11 +257,13 @@ class Medusa(object):
 
             if action == 'encode':
                 sys.stdout.write('\r{}Encrypting "{}" ({}/{})'.format(ind, dir_name,
-                                                                      files.index(f) + 1,
+                                                                      files.index(
+                                                                          f) + 1,
                                                                       len(files)))
             else:
                 sys.stdout.write('\r{}Decrypting "{}" ({}/{})'.format(ind, dir_name,
-                                                                      files.index(f) + 1,
+                                                                      files.index(
+                                                                          f) + 1,
                                                                       len(files)))
             sys.stdout.flush()
 
@@ -272,7 +278,7 @@ class Medusa(object):
             sleep(0.1)
 
         if self.verbose:
-            print ('')
+            print('')
 
     def encode_dir(self, input_path, output_path):
         '''Encodes one directory.
@@ -307,7 +313,7 @@ class Medusa(object):
             Execution context.
         '''
         if self.verbose:
-            print ('')
+            print('')
 
         if not os.path.isabs(args['input']):
             input_path = os.path.join(self.base_path, args['input'])
@@ -334,7 +340,7 @@ class Medusa(object):
             # if asked, zip the resulting directory
             if args['zip']:
                 if self.verbose:
-                    print ('\nZipping encrypted directory.')
+                    print('\nZipping encrypted directory.')
                 shutil.make_archive(output_path, 'zip', output_path)
 
 
@@ -363,8 +369,9 @@ def main(args=None):
         if 'action' not in args:
             print('[Medusa - Error] Missing argument: action.')
             return
-        if args['action'] not in [ 'encode', 'decode' ]:
-            print('[Medusa - Error] Invalid argument: action should be "encode" or "decode".')
+        if args['action'] not in ['encode', 'decode']:
+            print(
+                '[Medusa - Error] Invalid argument: action should be "encode" or "decode".')
             return
 
         if 'exclude' not in args:
@@ -375,22 +382,25 @@ def main(args=None):
             args['verbose'] = False
 
         previous_frame = inspect.currentframe().f_back
-        base_path = os.path.abspath(os.path.dirname(inspect.getframeinfo(previous_frame)[0]))
+        base_path = os.path.abspath(os.path.dirname(
+            inspect.getframeinfo(previous_frame)[0]))
 
     # display info
     if args['verbose']:
         log = ShellColors.BLUE + '-------------------------------------\n'
-        log += 'MEDUSA {}\n'.format('Encryption' if args['action'] == 'encode' else 'Decryption')
+        log += 'MEDUSA {}\n'.format(
+            'Encryption' if args['action'] == 'encode' else 'Decryption')
         log += '-------------------------------------\n'
         log += ShellColors.ENDC
         log += 'Working on: {}\n'.format(args['input'])
-        print (log)
+        print(log)
 
     # check for overwrite problems: if decoding, ask to overwrite already existing file
     if args['action'] == 'decode':
         # if there is already a file with the decoded name
         if os.path.exists(args['output']):
-            q = input(ShellColors.YELLOW + 'Overwrite existing data? (y/n) ' + ShellColors.ENDC)
+            q = input(ShellColors.YELLOW +
+                      'Overwrite existing data? (y/n) ' + ShellColors.ENDC)
             # if overwriting allowed
             if q == 'y':
                 # get keys
@@ -404,7 +414,8 @@ def main(args=None):
                 processor.process(args)
             # else do nothing
             else:
-                print (ShellColors.RED + 'No data overwriting. Process aborted.' + ShellColors.ENDC)
+                print(ShellColors.RED +
+                      'No data overwriting. Process aborted.' + ShellColors.ENDC)
         else:
             # get keys
             key = getpass.getpass(prompt='Encoding key: ')
@@ -422,7 +433,8 @@ def main(args=None):
         complement_key = getpass.getpass(prompt='Complement key: ')
         # if encoding, check for secure password
         if (len(key) == 0 or len(complement_key) == 0) and args['verbose']:
-            print (ShellColors.RED + 'Password not secure. Process aborted.' + ShellColors.ENDC)
+            print(ShellColors.RED +
+                  'Password not secure. Process aborted.' + ShellColors.ENDC)
         else:
             # encode
             processor = Medusa(key, complement_key,
@@ -432,4 +444,4 @@ def main(args=None):
             processor.process(args)
 
     if args['verbose']:
-        print ('-------------------------------------\n' + ShellColors.ENDC)
+        print('-------------------------------------\n' + ShellColors.ENDC)
