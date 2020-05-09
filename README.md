@@ -65,10 +65,15 @@ medusa -e -i <input_path> -o <output_path> -v
 
 When you want to use Medusa in a Python script, you can either:
 
-- run an interactive Medusa process just like the one you get with the CLI
+- run a Medusa process with some args and then some interactive user inputs for on-the-fly keys definition
 - or instantiate a `Medusa` object to use and reuse as much as you want
 
-The first possibility still relies on the command-line arguments passed to your script. So you should pass your own script the same args as you would to the Medusa CLI. But this is a nice way of putting some Medusa logic in the middle of your script, for example:
+The first possibility is a nice way of putting some Medusa logic in the middle of your script. You must pass the lib some args:
+
+1. the input path, the output path and the action to perform are required (the action can be either "encode" or "decode")
+2. you may pass optional parameters (see the previous section for details on each): `exclude`, `zip` and `verbose`
+
+Here is an example script using this technique:
 
 ```py
 from medusa import medusa
@@ -77,8 +82,12 @@ if __name__ == '__main__':
     # do some stuff...
     print('Hello world.')
 
-    # run Medusa with given args
-    medusa()
+    # run Medusa with some basic args
+    medusa(dict(
+        input='data/input.txt',
+        output='data/output.txt',
+        action='encode'
+    ))
 
     # wrap up with some other thing
     print('Goodbye world.')
@@ -112,3 +121,5 @@ if __name__ == '__main__':
     # decode some directory
     processor.decode_dir('data/output_dir', 'data/new_dir')
 ```
+
+_Note: whenever you use Medusa in a script, the lib will infer the path of the calling script as the base path for all input/output paths building. For example, if you save the above scripts in an `examples/` folder and then run them, all paths will be relative to this `examples/` subfolder._

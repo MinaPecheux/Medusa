@@ -27,10 +27,11 @@ __author__ = 'Mina Pêcheux'
 __copyright__ = 'Copyright 2020, Mina Pêcheux'
 
 import argparse
-import shutil
+import inspect
 import getpass
-import sys
 import os
+import shutil
+import sys
 from time import sleep
 
 from .utils import ShellColors, ENCODE_TABLE, DECODE_TABLE
@@ -54,7 +55,7 @@ def parse_args(args):
 
 class Medusa(object):
 
-    def __init__(self, key, complement_key, exclude=[], verbose=False):
+    def __init__(self, key, complement_key, exclude=[], verbose=False, base_path=None):
         '''Main Medusa object to encode/decode strings using the Vigenere technique.
 
         Parameters
@@ -67,13 +68,18 @@ class Medusa(object):
             List of files to exclude from processing (empty list by default).
         verbose : bool, optional
             If true, the process with print logs during its execution (false by default).
+        base_path : str, optional
+            Root path to prepend all input/output paths with if they are not absolute.
         '''
         self.key = key
         self.complement_key = complement_key
         self.exclude = exclude
         self.verbose = verbose
 
-        self.base_path = os.path.abspath(os.path.dirname(sys.argv[0]))
+        if base_path is None:
+            self.base_path = os.path.abspath(os.path.dirname(sys.argv[0]))
+        else:
+            self.base_path = base_path
 
     def encode(self, content):
         '''Encodes a string using the processor keys.
@@ -302,8 +308,16 @@ class Medusa(object):
         '''
         if self.verbose:
             print ('')
-        input_path = os.path.abspath(args['input'])
-        output_path = os.path.abspath(args['output'])
+
+        if not os.path.isabs(args['input']):
+            input_path = os.path.join(self.base_path, args['input'])
+        else:
+            input_path = args['input']
+        if not os.path.isabs(args['output']):
+            output_path = os.path.join(self.base_path, args['output'])
+        else:
+            output_path = args['output']
+
         input_type = 'dir' if os.path.isdir(input_path) else 'file'
 
         # if acting on FILE
@@ -324,19 +338,44 @@ class Medusa(object):
                 shutil.make_archive(output_path, 'zip', output_path)
 
 
-def main():
-    parser = argparse.ArgumentParser()
-    actions_parser = parser.add_mutually_exclusive_group(required=True)
-    actions_parser.add_argument('-e', '--encode', action='store_true')
-    actions_parser.add_argument('-d', '--decode', action='store_true')
+def main(args=None):
+    if args is None:
+        parser = argparse.ArgumentParser()
+        actions_parser = parser.add_mutually_exclusive_group(required=True)
+        actions_parser.add_argument('-e', '--encode', action='store_true')
+        actions_parser.add_argument('-d', '--decode', action='store_true')
 
-    parser.add_argument('-i', '--input', type=str, required=True)
-    parser.add_argument('-o', '--output', type=str, required=True)
-    parser.add_argument('--exclude', type=str, default=[], nargs='+')
-    parser.add_argument('-z', '--zip', action='store_true')
-    parser.add_argument('-v', '--verbose', action='store_true')
+        parser.add_argument('-i', '--input', type=str, required=True)
+        parser.add_argument('-o', '--output', type=str, required=True)
+        parser.add_argument('--exclude', type=str, default=[], nargs='+')
+        parser.add_argument('-z', '--zip', action='store_true')
+        parser.add_argument('-v', '--verbose', action='store_true')
 
-    args = parse_args(parser.parse_args())
+        args = parse_args(parser.parse_args())
+        base_path = None
+    else:
+        if 'input' not in args:
+            print('[Medusa - Error] Missing argument: input.')
+            return
+        if 'output' not in args:
+            print('[Medusa - Error] Missing argument: output.')
+            return
+        if 'action' not in args:
+            print('[Medusa - Error] Missing argument: action.')
+            return
+        if args['action'] not in [ 'encode', 'decode' ]:
+            print('[Medusa - Error] Invalid argument: action should be "encode" or "decode".')
+            return
+
+        if 'exclude' not in args:
+            args['exclude'] = []
+        if 'zip' not in args:
+            args['zip'] = False
+        if 'verbose' not in args:
+            args['verbose'] = False
+
+        previous_frame = inspect.currentframe().f_back
+        base_path = os.path.abspath(os.path.dirname(inspect.getframeinfo(previous_frame)[0]))
 
     # display info
     if args['verbose']:
@@ -358,7 +397,10 @@ def main():
                 key = getpass.getpass(prompt='Encoding key: ')
                 complement_key = getpass.getpass(prompt='Complement key: ')
                 # decode
-                processor = Medusa(key, complement_key, exclude=args['exclude'], verbose=args['verbose'])
+                processor = Medusa(key, complement_key,
+                                   exclude=args['exclude'],
+                                   verbose=args['verbose'],
+                                   base_path=base_path)
                 processor.process(args)
             # else do nothing
             else:
@@ -368,7 +410,10 @@ def main():
             key = getpass.getpass(prompt='Encoding key: ')
             complement_key = getpass.getpass(prompt='Complement key: ')
             # decode
-            processor = Medusa(key, complement_key, exclude=args['exclude'], verbose=args['verbose'])
+            processor = Medusa(key, complement_key,
+                               exclude=args['exclude'],
+                               verbose=args['verbose'],
+                               base_path=base_path)
             processor.process(args)
 
     else:
@@ -380,7 +425,10 @@ def main():
             print (ShellColors.RED + 'Password not secure. Process aborted.' + ShellColors.ENDC)
         else:
             # encode
-            processor = Medusa(key, complement_key, exclude=args['exclude'], verbose=args['verbose'])
+            processor = Medusa(key, complement_key,
+                               exclude=args['exclude'],
+                               verbose=args['verbose'],
+                               base_path=base_path)
             processor.process(args)
 
     if args['verbose']:

@@ -30,8 +30,12 @@ if __name__ == '__main__':
     # do some stuff...
     print('Hello world.')
 
-    # run Medusa with given args
-    medusa()
+    # run Medusa with some basic args
+    medusa(dict(
+        input='data/input.txt',
+        output='data/output.txt',
+        action='encode'
+    ))
 
     # wrap up with some other thing
     print('Goodbye world.')
