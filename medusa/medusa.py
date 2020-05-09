@@ -37,10 +37,15 @@ from .utils import ShellColors, ALPHABET, V_TABLES
 
 
 def parse_args(args):
+    if args.decode:
+        action = 'decode'
+    elif args.encode:
+        action = 'encode'
     parsed = dict(
         input=args.input,
         output=args.output,
-        action=args.action,
+        action=action,
+        exclude=args.exclude,
         zip=args.zip,
         verbose=args.verbose
     )
@@ -49,20 +54,23 @@ def parse_args(args):
 
 class Medusa(object):
 
-    def __init__(self, key, complement_key, verbose=False):
+    def __init__(self, key, complement_key, exclude=[], verbose=False):
         '''Main Medusa object to encode/decode strings using the Vigenere technique.
 
         Parameters
         ----------
-        key : string
+        key : str
             Main key to encode/decode content.
-        complement_key : string
+        complement_key : str
             Secondary key to encode/decode content.
+        exclude : list(str), optional
+            List of files to exclude from processing (empty list by default).
         verbose : bool, optional
-            If true, the process with print logs during its execution.
+            If true, the process with print logs during its execution (false by default).
         '''
         self.key = key
         self.complement_key = complement_key
+        self.exclude = exclude
         self.verbose = verbose
 
     def encode(self, content):
@@ -70,12 +78,12 @@ class Medusa(object):
 
         Parameters
         ----------
-        content : string
+        content : str
             Content to encode.
 
         Returns
         -------
-        string
+        str
             Encoded content.
         '''
         key_rank = 0                # counter that goes through the characters of the key
@@ -106,12 +114,12 @@ class Medusa(object):
 
         Parameters
         ----------
-        content : string
+        content : str
             Content to decode.
 
         Returns
         -------
-        string
+        str
             Decoded content.
         '''
         key_rank = 0                # counter that goes through the characters of the key
@@ -136,6 +144,99 @@ class Medusa(object):
 
         return word_decoded
 
+    def process_file(self, input_path, output_path, action, indent=0):
+        '''Processes one file (either for encoding or decoding).
+
+        Parameters
+        ----------
+        input_path : str
+            Absolute path to the original file.
+        output_path : str
+            Absolute path to the new processed file.
+        action : str
+            Action to perform, can be: "encode" or "decode".
+        indent : int, optional
+            Indent size for log verbose output (0 by default).
+        '''
+        ind = ' ' * 4 * indent
+
+        # read file
+        if self.verbose:
+            print ('\n{}> {}'.format(ind, os.path.basename(input_path)))
+
+        with open(input_path, 'r') as FILE_READ:
+            content = FILE_READ.read()
+
+        # encryption
+        if action == 'encode':
+            # write encoded file
+            with open(output_path, 'w') as FILE_WRITE:
+                FILE_WRITE.write(self.encode(content))
+        # decryption
+        elif action == 'decode':
+            # write decoded file
+            with open(output_path, 'w') as FILE_WRITE:
+                FILE_WRITE.write(self.decode(content))
+
+    def process_dir(self, input_path, output_path, action, indent=0):
+        '''Processes one directory recursively (either for encoding or decoding).
+
+        Parameters
+        ----------
+        input_path : str
+            Absolute path to the original directory.
+        output_path : str
+            Absolute path to the new processed directory.
+        action : str
+            Action to perform, can be: "encode" or "decode".
+        indent : int, optional
+            Indent size for log verbose output (0 by default).
+        '''
+        ind = ' ' * 4 * indent
+
+        # prepare output dir if need be
+        if not os.path.exists(output_path):
+            os.makedirs(output_path)
+
+        dir_name = os.path.basename(input_path)
+        print ('')
+
+        # get directory files
+        if self.verbose:
+            log = 'Reading files from directory: "{}"'.format(dir_name)
+            print (ind + log)
+            print (ind + '-' * len(log))
+        files = [ f for f in os.listdir(input_path) ]
+
+        # go through files in directory
+        for f in files:
+            if f.startswith('.') or f in self.exclude:
+                if self.verbose:
+                    print(ind + 'Ignoring:', f)
+                continue
+
+            if action == 'encode':
+                sys.stdout.write('\r{}Encrypting "{}" ({}/{})'.format(ind, dir_name,
+                                                                      files.index(f) + 1,
+                                                                      len(files)))
+            else:
+                sys.stdout.write('\r{}Decrypting "{}" ({}/{})'.format(ind, dir_name,
+                                                                      files.index(f) + 1,
+                                                                      len(files)))
+            sys.stdout.flush()
+
+            # read input file
+            ipath = os.path.abspath(os.path.join(input_path, f))
+            opath = os.path.abspath(os.path.join(output_path, f))
+            if os.path.isdir(ipath):
+                self.process_dir(ipath, opath, action, indent=indent + 1)
+            else:
+                self.process_file(ipath, opath, action, indent=indent)
+
+            sleep(0.1)
+
+        if self.verbose: print ('')
+
     def process(self, args):
         '''Processes the inputs (using the args context).
 
@@ -145,80 +246,37 @@ class Medusa(object):
             Execution context.
         '''
         if self.verbose: print ('')
-        input_name = args['input']
-        input_type = 'dir' if os.path.isdir(input_name) else 'file'
+        input_path = os.path.abspath(args['input'])
+        output_path = os.path.abspath(args['output'])
+        input_type = 'dir' if os.path.isdir(input_path) else 'file'
 
         # if acting on FILE
         if input_type == 'file':
-            # read file
-            if self.verbose: print ('Reading file.')
-
-            with open(input_name, mode='r') as FILE_READ:
-                content = FILE_READ.read()
-
-            # encryption
-            if args['action'] == 'encode':
-                # write encoded file
-                if self.verbose: print ('Encrypting.')
-                with open(args['output'], mode='w') as FILE_WRITE:
-                    FILE_WRITE.write(self.encode(content))
-            # decryption
-            elif args['action'] == 'decode':
-                # write decoded file
-                if self.verbose: print ('Decrypting.')
-                with open(args['output'], mode='w') as FILE_WRITE:
-                    FILE_WRITE.write(self.decode(content))
-
+            self.process_file(input_path=input_path,
+                              output_path=output_path,
+                              action=args['action'])
         # else if acting on DIRECTORY
         elif input_type == 'dir':
-            # prepare output dir if need be
-            if not os.path.exists(args['output']):
-                os.makedirs(args['output'])
-
-            if self.verbose: print ('')
-
-            # get directory files
-            if self.verbose: print ('Reading files from directory.')
-            files = [ f for f in os.listdir(input_name) ]
-
-            # go through files in directory
-            for f in files:
-                if f.startswith('.'):
-                    continue
-
-                if args['action'] == 'encode':
-                    sys.stdout.write('\rEncrypting... (%d/%d)' % (files.index(f) + 1, len(files)))
-                else:
-                    sys.stdout.write('\rDecrypting... (%d/%d)' % (files.index(f) + 1, len(files)))
-                sys.stdout.flush()
-
-                # read input file
-                with open(os.path.join(input_name, f), mode='r') as FILE_READ:
-                    content = FILE_READ.read()
-
-                # write output file
-                with open(os.path.join(args['output'], f), mode='w') as FILE_WRITE:
-                    if args['action'] == 'encode':
-                        FILE_WRITE.write(self.encode(content))
-                    else:
-                        FILE_WRITE.write(self.decode(content))
-
-                sleep(0.1)
-
-            if self.verbose: print ('')
-
+            self.process_dir(input_path=input_path,
+                             output_path=output_path,
+                             action=args['action'])
+                             
             # if asked, zip the resulting directory
             if args['zip']:
-                if self.verbose: print ('Zipping encrypted directory.')
-                shutil.make_archive(args['output'], 'zip', args['output'])
+                if self.verbose:
+                    print ('\nZipping encrypted directory.')
+                shutil.make_archive(output_path, 'zip', output_path)
 
 
 def main():
     parser = argparse.ArgumentParser()
+    actions_parser = parser.add_mutually_exclusive_group(required=True)
+    actions_parser.add_argument('-e', '--encode', action='store_true')
+    actions_parser.add_argument('-d', '--decode', action='store_true')
 
     parser.add_argument('-i', '--input', type=str, required=True)
     parser.add_argument('-o', '--output', type=str, required=True)
-    parser.add_argument('-a', '--action', type=str, required=True)
+    parser.add_argument('--exclude', type=str, default=[], nargs='+')
     parser.add_argument('-z', '--zip', action='store_true')
     parser.add_argument('-v', '--verbose', action='store_true')
 
@@ -230,11 +288,7 @@ def main():
         log += 'MEDUSA {}\n'.format('Encryption' if args['action'] == 'encode' else 'Decryption')
         log += '-------------------------------------\n'
         log += ShellColors.ENDC
-        if args['type'] == 'file':
-            log += 'Working on file: %s\n' % args['input']
-        elif args['type'] == 'dir' or args['type'] == 'dirzip':
-            log += 'Working on directory: %s\n' % args['input']
-
+        log += 'Working on: {}\n'.format(args['input'])
         print (log)
 
     # check for overwrite problems: if decoding, ask to overwrite already existing file
@@ -248,7 +302,7 @@ def main():
                 key = getpass.getpass(prompt='Encoding key: ')
                 complement_key = getpass.getpass(prompt='Complement key: ')
                 # decode
-                processor = Medusa(key, complement_key, verbose=args['verbose'])
+                processor = Medusa(key, complement_key, exclude=args['exclude'], verbose=args['verbose'])
                 processor.process(args)
             # else do nothing
             else:
@@ -258,7 +312,7 @@ def main():
             key = getpass.getpass(prompt='Encoding key: ')
             complement_key = getpass.getpass(prompt='Complement key: ')
             # decode
-            processor = Medusa(key, complement_key, verbose=args['verbose'])
+            processor = Medusa(key, complement_key, exclude=args['exclude'], verbose=args['verbose'])
             processor.process(args)
 
     else:
@@ -270,7 +324,7 @@ def main():
             print (ShellColors.RED + 'Password not secure. Process aborted.' + ShellColors.ENDC)
         else:
             # encode
-            processor = Medusa(key, complement_key, verbose=args['verbose'])
+            processor = Medusa(key, complement_key, exclude=args['exclude'], verbose=args['verbose'])
             processor.process(args)
 
     if args['verbose']:
