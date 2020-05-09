@@ -50,16 +50,39 @@ def parse_args(args):
 class Medusa(object):
 
     def __init__(self, key, complement_key, verbose=False):
+        '''Main Medusa object to encode/decode strings using the Vigenere technique.
+
+        Parameters
+        ----------
+        key : string
+            Main key to encode/decode content.
+        complement_key : string
+            Secondary key to encode/decode content.
+        verbose : bool, optional
+            If true, the process with print logs during its execution.
+        '''
         self.key = key
         self.complement_key = complement_key
         self.verbose = verbose
 
-    def encode(self, string):
+    def encode(self, content):
+        '''Encodes a string using the processor keys.
+
+        Parameters
+        ----------
+        content : string
+            Content to encode.
+
+        Returns
+        -------
+        string
+            Encoded content.
+        '''
         key_rank = 0                # counter that goes through the characters of the key
         complement_key_rank = 0     # counter that goes through the complement key
         word_encoded = ''           # result word
         # go through the characters of the word to code
-        for c in string:
+        for c in content:
             # apply Vigenere method
             for i in V_TABLES:
                 if i[0] == self.key[key_rank]:
@@ -78,12 +101,24 @@ class Medusa(object):
 
         return word_encoded
 
-    def decode(self, string):
+    def decode(self, content):
+        '''Decodes a string using the processor keys.
+
+        Parameters
+        ----------
+        content : string
+            Content to decode.
+
+        Returns
+        -------
+        string
+            Decoded content.
+        '''
         key_rank = 0                # counter that goes through the characters of the key
         complement_key_rank = 0     # counter that goes through the complement key
         word_decoded = ''           # result word
         # go through the characters of the word to decode
-        for c in string:
+        for c in content:
             for i in V_TABLES:
                 if i[0] == self.key[key_rank]:
                     for j in i:
@@ -102,6 +137,13 @@ class Medusa(object):
         return word_decoded
 
     def process(self, args):
+        '''Processes the inputs (using the args context).
+
+        Parameters
+        ----------
+        args : dict
+            Execution context.
+        '''
         if self.verbose: print ('')
         input_name = args['input']
 

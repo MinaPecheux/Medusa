@@ -28,15 +28,10 @@ __copyright__ = 'Copyright 2020, Mina Pêcheux'
 
 
 ALPHABET = [ chr(x) for x in range(256) ]
-V_TABLES = []
-index = 0
-for i in ALPHABET:
-    h_table = []
-    for j in ALPHABET:
-        h_table.append(ALPHABET[(ALPHABET.index(j) + index) % len(ALPHABET)])
-
-    V_TABLES.append(h_table)
-    index += 1
+V_TABLES = [
+    [ ALPHABET[(ALPHABET.index(j) + i) % len(ALPHABET)] for j in ALPHABET ]
+    for i in range(len(ALPHABET))
+]
 
 
 class ShellColors(object):
