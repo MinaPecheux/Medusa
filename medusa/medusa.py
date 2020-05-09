@@ -8,10 +8,10 @@
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be included in all
 # copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,7 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 # ==============================================================================
-# [Medusa] Mini Encoding/Decoding Util with Simple Algorithms
+# [Medusa] Mini Encoding/Decoding Utility with Simple Algorithms
 # ------------------------------------------------------------------------------
 
 __author__ = 'Mina Pêcheux'
@@ -33,7 +33,7 @@ import sys
 import os
 from time import sleep
 
-from .utils import ShellColors, ALPHABET, ENCODE_TABLE, DECODE_TABLE
+from .utils import ShellColors, ENCODE_TABLE, DECODE_TABLE
 
 
 def parse_args(args):
@@ -229,7 +229,8 @@ class Medusa(object):
 
             sleep(0.1)
 
-        if self.verbose: print ('')
+        if self.verbose:
+            print ('')
 
     def process(self, args):
         '''Processes the inputs (using the args context).
@@ -239,7 +240,8 @@ class Medusa(object):
         args : dict
             Execution context.
         '''
-        if self.verbose: print ('')
+        if self.verbose:
+            print ('')
         input_path = os.path.abspath(args['input'])
         output_path = os.path.abspath(args['output'])
         input_type = 'dir' if os.path.isdir(input_path) else 'file'
@@ -254,7 +256,7 @@ class Medusa(object):
             self.process_dir(input_path=input_path,
                              output_path=output_path,
                              action=args['action'])
-                             
+
             # if asked, zip the resulting directory
             if args['zip']:
                 if self.verbose:
@@ -323,4 +325,3 @@ def main():
 
     if args['verbose']:
         print ('-------------------------------------\n' + ShellColors.ENDC)
-
