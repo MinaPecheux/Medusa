@@ -1,4 +1,4 @@
-# Copyright 2019 Mina Pêcheux (mina.pecheux@gmail.com)
+# Copyright 2020 Mina Pêcheux (mina.pecheux@gmail.com)
 # ---------------------------
 # Distributed under the MIT License:
 # ==================================
@@ -72,6 +72,8 @@ class Medusa(object):
         self.complement_key = complement_key
         self.exclude = exclude
         self.verbose = verbose
+
+        self.base_path = os.path.abspath(os.path.dirname(sys.argv[0]))
 
     def encode(self, content):
         '''Encodes a string using the processor keys.
@@ -154,6 +156,11 @@ class Medusa(object):
         '''
         ind = ' ' * 4 * indent
 
+        if not os.path.isabs(input_path):
+            input_path = os.path.join(self.base_path, input_path)
+        if not os.path.isabs(output_path):
+            output_path = os.path.join(self.base_path, output_path)
+
         # read file
         if self.verbose:
             print ('\n{}> {}'.format(ind, os.path.basename(input_path)))
@@ -172,6 +179,30 @@ class Medusa(object):
             with open(output_path, 'w') as FILE_WRITE:
                 FILE_WRITE.write(self.decode(content))
 
+    def encode_file(self, input_path, output_path):
+        '''Encodes one file.
+
+        Parameters
+        ----------
+        input_path : str
+            Absolute path to the original file.
+        output_path : str
+            Absolute path to the new processed file.
+        '''
+        self.process_file(input_path, output_path, 'encode')
+
+    def decode_file(self, input_path, output_path):
+        '''Decodes one file.
+
+        Parameters
+        ----------
+        input_path : str
+            Absolute path to the original file.
+        output_path : str
+            Absolute path to the new processed file.
+        '''
+        self.process_file(input_path, output_path, 'decode')
+
     def process_dir(self, input_path, output_path, action, indent=0):
         '''Processes one directory recursively (either for encoding or decoding).
 
@@ -187,6 +218,11 @@ class Medusa(object):
             Indent size for log verbose output (0 by default).
         '''
         ind = ' ' * 4 * indent
+
+        if not os.path.isabs(input_path):
+            input_path = os.path.join(self.base_path, input_path)
+        if not os.path.isabs(output_path):
+            output_path = os.path.join(self.base_path, output_path)
 
         # prepare output dir if need be
         if not os.path.exists(output_path):
@@ -231,6 +267,30 @@ class Medusa(object):
 
         if self.verbose:
             print ('')
+
+    def encode_dir(self, input_path, output_path):
+        '''Encodes one directory.
+
+        Parameters
+        ----------
+        input_path : str
+            Absolute path to the original directory.
+        output_path : str
+            Absolute path to the new processed directory.
+        '''
+        self.process_dir(input_path, output_path, 'encode')
+
+    def decode_dir(self, input_path, output_path):
+        '''Decodes one directory.
+
+        Parameters
+        ----------
+        input_path : str
+            Absolute path to the original directory.
+        output_path : str
+            Absolute path to the new processed directory.
+        '''
+        self.process_dir(input_path, output_path, 'decode')
 
     def process(self, args):
         '''Processes the inputs (using the args context).

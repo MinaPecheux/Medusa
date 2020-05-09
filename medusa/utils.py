@@ -1,4 +1,4 @@
-# Copyright 2019 Mina Pêcheux (mina.pecheux@gmail.com)
+# Copyright 2020 Mina Pêcheux (mina.pecheux@gmail.com)
 # ---------------------------
 # Distributed under the MIT License:
 # ==================================
