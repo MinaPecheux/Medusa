@@ -33,7 +33,7 @@ import sys
 import os
 from time import sleep
 
-from .utils import ShellColors, ALPHABET, V_TABLES
+from .utils import ShellColors, ALPHABET, ENCODE_TABLE, DECODE_TABLE
 
 
 def parse_args(args):
@@ -92,11 +92,8 @@ class Medusa(object):
         # go through the characters of the word to code
         for c in content:
             # apply Vigenere method
-            for i in V_TABLES:
-                if i[0] == self.key[key_rank]:
-                    for j in i:
-                        if i.index(j) == ALPHABET.index(c):
-                            word_encoded += j
+            row = ENCODE_TABLE[self.key[key_rank]]
+            word_encoded += row[c]
 
             # access new character of the key
             last_key_rank = key_rank
@@ -127,11 +124,8 @@ class Medusa(object):
         word_decoded = ''           # result word
         # go through the characters of the word to decode
         for c in content:
-            for i in V_TABLES:
-                if i[0] == self.key[key_rank]:
-                    for j in i:
-                        if j == c:
-                            word_decoded += ALPHABET[i.index(j)]
+            row = DECODE_TABLE[self.key[key_rank]]
+            word_decoded += row[c]
 
             # access new character of the key
             last_key_rank = key_rank
