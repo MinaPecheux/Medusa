@@ -6,7 +6,7 @@ For now, Medusa uses the [Vigenere cypher](https://en.wikipedia.org/wiki/Vigen%C
 
 This cryptography method is symmetric and it uses a key and a complement key to perform (de)cyphering on a text.
 
-_Note: to make it harder to decypher, Medusa uses a wide range of characters including Unicode characters. So it requires Python 3 to work._
+_Note: to make it harder to decypher, Medusa uses a wide range of characters including Unicode characters... so it requires Python 3 to work._
 
 ## Install
 
@@ -49,8 +49,7 @@ medusa -e -i <input_path> -o <output_path> --zip
 You can also ignore specific files or folders by passing a list of names in the `--exclude` argument:
 
 ```
-medusa -e -i <input_path> -o <output_path> \
-    --exclude __pycache__ .DS_Store
+medusa -e -i <input_path> -o <output_path> --exclude __pycache__ .DS_Store
 ```
 
 ### Verbose mode
@@ -65,13 +64,13 @@ medusa -e -i <input_path> -o <output_path> -v
 
 When you want to use Medusa in a Python script, you can either:
 
-- run a Medusa process with some args and then some interactive user inputs for on-the-fly keys definition
-- or instantiate a `Medusa` object to use and reuse as much as you want
+1. run a Medusa process with some args and then some interactive user inputs for on-the-fly keys definition
+2. or instantiate a `Medusa` object to use and reuse as much as you want
 
 The first possibility is a nice way of putting some Medusa logic in the middle of your script. You must pass the lib some args:
 
-1. the input path, the output path and the action to perform are required (the action can be either "encode" or "decode")
-2. you may pass optional parameters (see the previous section for details on each): `exclude`, `zip` and `verbose`
+- the input path, the output path and the action to perform are required (the action can be either "encode" or "decode")
+- you may pass optional parameters (see the previous section for details on each): `zip`, `exclude` and `verbose`
 
 Here is an example script using this technique:
 
