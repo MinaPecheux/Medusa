@@ -2,9 +2,11 @@
 
 The Mini Encoding/Decoding Utility with Simple Algorithms (Medusa) is a small Python lib to easily cypher and decypher files or directories using basic cryptography algorithms.
 
-For now, Medusa offers 1 encoding/decoding algorithms:
-- the [Vigenere cypher](https://en.wikipedia.org/wiki/Vigen%C3%A8re_cipher): a symmetric cryptography method
-  that uses a key and a complement key
+For now, Medusa offers 2 encoding/decoding algorithms:
+- the basic [Caesar (or shift) cipher](https://en.wikipedia.org/wiki/Caesar_cipher): a symmetric cryptography
+  method that simply shifts letters by a given offset to get a ciphertext alphabet
+- the [Vigenere cipher](https://en.wikipedia.org/wiki/Vigen%C3%A8re_cipher): a symmetric polyalphabetic cryptography
+  method that uses a key and a complement key
 
 _Note: to make it harder to decypher, Medusa uses a wide range of characters including Unicode characters... so it requires Python 3 to work._
 

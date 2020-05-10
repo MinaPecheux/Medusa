@@ -26,10 +26,10 @@
 __author__ = 'Mina Pêcheux'
 __copyright__ = 'Copyright 2020, Mina Pêcheux'
 
-from .shift import (required_params as required_params_shift,
-                    check_secure as check_secure_shift,
-                    encode as encode_shift,
-                    decode as decode_shift)
+from .caesar import (required_params as required_params_caesar,
+                     check_secure as check_secure_caesar,
+                     encode as encode_caesar,
+                     decode as decode_caesar)
 
 from .vigenere import (required_params as required_params_vigenere,
                        check_secure as check_secure_vigenere,
@@ -37,10 +37,10 @@ from .vigenere import (required_params as required_params_vigenere,
                        decode as decode_vigenere)
 
 ALGORITHMS = dict(
-    shift=(required_params_shift,
-           check_secure_shift,
-           encode_shift,
-           decode_shift),
+    caesar=(required_params_caesar,
+            check_secure_caesar,
+            encode_caesar,
+            decode_caesar),
     vigenere=(required_params_vigenere,
               check_secure_vigenere,
               encode_vigenere,

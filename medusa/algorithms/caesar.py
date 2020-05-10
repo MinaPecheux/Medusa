@@ -30,7 +30,7 @@ from .common import ALPHABET
 
 
 def required_params():
-    '''List of params that are required for the shift process.
+    '''List of params that are required for the Caesar process.
 
     Returns
     -------
@@ -41,7 +41,7 @@ def required_params():
 
 
 def check_secure(params):
-    '''Checks if the params are secured enough for a shift process.
+    '''Checks if the params are secured enough for a Caesar process.
 
     Parameters
     ----------
@@ -59,7 +59,7 @@ def check_secure(params):
 
 
 def encode(content, params):
-    '''Encodes a string using the shift technique.
+    '''Encodes a string using the Caesar technique.
 
     Parameters
     ----------
@@ -79,7 +79,7 @@ def encode(content, params):
 
 
 def decode(content, params):
-    '''Decodes a string using the shift technique.
+    '''Decodes a string using the Caesar technique.
 
     Parameters
     ----------

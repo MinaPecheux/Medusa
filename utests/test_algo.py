@@ -3,10 +3,10 @@ from medusa import Medusa
 
 class TestAlgo():
 
-    def test_shift(self):
+    def test_caesar(self):
         text = 'hello world'
 
-        processor = Medusa(algo='shift',
+        processor = Medusa(algo='caesar',
                            params=dict(shift=1))
         encoded = processor.encode(text)
 
