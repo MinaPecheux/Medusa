@@ -32,8 +32,8 @@ if __name__ == '__main__':
 
     # run Medusa with some basic args
     medusa(dict(
-        input='data/input.txt',
-        output='data/output.txt',
+        input='../utests/data/input.txt',
+        output='../utests/data/output.txt',
         action='encode'
     ))
 

@@ -34,17 +34,21 @@ if __name__ == '__main__':
     encoded = processor.encode('hello world')
 
     # encode some file
-    processor.encode_file('data/input.txt', 'data/output.txt')
+    processor.encode_file('../utests/data/input.txt',
+                          '../utests/data/output.txt')
 
     # encode some directory
-    processor.encode_dir('data/input_dir', 'data/output_dir')
+    processor.encode_dir('../utests/data/input_dir',
+                         '../utests/data/output_dir')
 
     # DECODING
     # decode a string directly
     decoded = processor.decode('ÓÐ×ÑèÜèÝ×Ý')
 
     # decode some file
-    processor.decode_file('data/output.txt', 'data/new.txt')
+    processor.decode_file('../utests/data/output.txt',
+                          '../utests/data/new.txt')
 
     # decode some directory
-    processor.decode_dir('data/output_dir', 'data/new_dir')
+    processor.decode_dir('../utests/data/output_dir',
+                         '../utests/data/new_dir')
