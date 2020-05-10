@@ -23,26 +23,4 @@
 # [Medusa] Mini Encoding/Decoding Utility with Simple Algorithms
 # ------------------------------------------------------------------------------
 
-__author__ = 'Mina Pêcheux'
-__copyright__ = 'Copyright 2020, Mina Pêcheux'
-
-from .shift import (required_params as required_params_shift,
-                    check_secure as check_secure_shift,
-                    encode as encode_shift,
-                    decode as decode_shift)
-
-from .vigenere import (required_params as required_params_vigenere,
-                       check_secure as check_secure_vigenere,
-                       encode as encode_vigenere,
-                       decode as decode_vigenere)
-
-ALGORITHMS = dict(
-    shift=(required_params_shift,
-           check_secure_shift,
-           encode_shift,
-           decode_shift),
-    vigenere=(required_params_vigenere,
-              check_secure_vigenere,
-              encode_vigenere,
-              decode_vigenere)
-)
+ALPHABET = [chr(x) for x in range(256)]

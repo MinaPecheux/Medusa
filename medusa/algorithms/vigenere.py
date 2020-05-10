@@ -26,7 +26,8 @@
 __author__ = 'Mina Pêcheux'
 __copyright__ = 'Copyright 2020, Mina Pêcheux'
 
-ALPHABET = [chr(x) for x in range(256)]
+from .common import ALPHABET
+
 ENCODE_TABLE = {
     c: {c2: ALPHABET[(j + i) % len(ALPHABET)]
         for j, c2 in enumerate(ALPHABET)}
