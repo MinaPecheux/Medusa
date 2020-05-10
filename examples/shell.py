@@ -32,6 +32,7 @@ if __name__ == '__main__':
 
     # run Medusa with some basic args
     medusa(dict(
+        algo='vigenere',
         input='../utests/data/input.txt',
         output='../utests/data/output.txt',
         action='encode'

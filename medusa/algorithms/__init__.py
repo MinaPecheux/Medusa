@@ -26,24 +26,14 @@
 __author__ = 'Mina Pêcheux'
 __copyright__ = 'Copyright 2020, Mina Pêcheux'
 
+from .vigenere import (required_params as required_params_vigenere,
+                       check_secure as check_secure_vigenere,
+                       encode as encode_vigenere,
+                       decode as decode_vigenere)
 
-ALPHABET = [chr(x) for x in range(256)]
-ENCODE_TABLE = {
-    c: {c2: ALPHABET[(j + i) % len(ALPHABET)]
-        for j, c2 in enumerate(ALPHABET)}
-    for i, c in enumerate(ALPHABET)
-}
-DECODE_TABLE = {
-    c: {ALPHABET[(j + i) % len(ALPHABET)]: c2
-        for j, c2 in enumerate(ALPHABET)}
-    for i, c in enumerate(ALPHABET)
-}
-
-
-class ShellColors(object):
-    YELLOW = '\033[93m'
-    BLUE = '\033[96m'
-    RED = '\033[91m'
-    ENDC = '\033[0m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
+ALGORITHMS = dict(
+    vigenere=(required_params_vigenere,
+              check_secure_vigenere,
+              encode_vigenere,
+              decode_vigenere)
+)

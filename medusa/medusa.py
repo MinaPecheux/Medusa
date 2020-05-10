@@ -34,7 +34,16 @@ import shutil
 import sys
 from time import sleep
 
-from .utils import ShellColors, ENCODE_TABLE, DECODE_TABLE
+from .algorithms import ALGORITHMS
+
+
+class ShellColors(object):
+    YELLOW = '\033[93m'
+    BLUE = '\033[96m'
+    RED = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
 
 
 def parse_args(args):
@@ -43,6 +52,7 @@ def parse_args(args):
     elif args.encode:
         action = 'encode'
     parsed = dict(
+        algo=args.algo,
         input=args.input,
         output=args.output,
         action=action,
@@ -55,100 +65,58 @@ def parse_args(args):
 
 class Medusa(object):
 
-    def __init__(self, key, complement_key, exclude=[], verbose=False, base_path=None):
-        '''Main Medusa object to encode/decode strings using the Vigenere technique.
+    def __init__(self, algo, params, exclude=[], verbose=False, base_path=None,
+                 exit_on_error=True):
+        '''Main Medusa object to encode/decode strings using basic cryptography techniques.
 
         Parameters
         ----------
-        key : str
-            Main key to encode/decode content.
-        complement_key : str
-            Secondary key to encode/decode content.
+        algo : str
+            Reference of the algorithm to use for encoding/decoding.
+        params : dict
+            Parameters to use in the algorithm (e.g. the specific keys to use).
         exclude : list(str), optional
             List of files to exclude from processing (empty list by default).
         verbose : bool, optional
             If true, the process with print logs during its execution (false by default).
         base_path : str, optional
             Root path to prepend all input/output paths with if they are not absolute.
+        exit_on_error : bool, optional
+            Whether or not to sys exit if object could not be instantiated (true by default).
         '''
-        self.key = key
-        self.complement_key = complement_key
+        required_params, checker, encoder, decoder = ALGORITHMS[algo]
+        missing_params = [p for p in required_params() if p not in params]
+        if len(missing_params) > 0:
+            msg = 'Invalid parameters: algorithm "{}" requires:'.format(algo)
+            print('[Medusa - Error] {}'.format(msg))
+            for param in missing_params:
+                print('-', param)
+            if exit_on_error:
+                sys.exit(1)
+            else:
+                return
+
+        # if encoding, check for secure password
+        check, error = checker(params)
+        if not check:
+            print('[Medusa - Error] {}'.format(error))
+            if exit_on_error:
+                sys.exit(1)
+            else:
+                return
+
+        self.algo = algo
+        self.params = params
         self.exclude = exclude
         self.verbose = verbose
+
+        self.encode = lambda content: encoder(content, self.params)
+        self.decode = lambda content: decoder(content, self.params)
 
         if base_path is None:
             self.base_path = os.path.abspath(os.path.dirname(sys.argv[0]))
         else:
             self.base_path = base_path
-
-    def encode(self, content):
-        '''Encodes a string using the processor keys.
-
-        Parameters
-        ----------
-        content : str
-            Content to encode.
-
-        Returns
-        -------
-        str
-            Encoded content.
-        '''
-        key_rank = 0                # counter that goes through the characters of the key
-        complement_key_rank = 0     # counter that goes through the complement key
-        word_encoded = ''           # result word
-        # go through the characters of the word to code
-        for c in content:
-            # apply Vigenere method
-            row = ENCODE_TABLE[self.key[key_rank]]
-            word_encoded += row[c]
-
-            # access new character of the key
-            last_key_rank = key_rank
-            k = self.complement_key[complement_key_rank]
-            key_rank = (key_rank + ord(k)) % len(self.key)
-
-            # if back to beginning of key
-            if key_rank <= last_key_rank:
-                # access next character of complement key
-                complement_key_rank = (complement_key_rank + 1) \
-                    % len(self.complement_key)
-
-        return word_encoded
-
-    def decode(self, content):
-        '''Decodes a string using the processor keys.
-
-        Parameters
-        ----------
-        content : str
-            Content to decode.
-
-        Returns
-        -------
-        str
-            Decoded content.
-        '''
-        key_rank = 0                # counter that goes through the characters of the key
-        complement_key_rank = 0     # counter that goes through the complement key
-        word_decoded = ''           # result word
-        # go through the characters of the word to decode
-        for c in content:
-            row = DECODE_TABLE[self.key[key_rank]]
-            word_decoded += row[c]
-
-            # access new character of the key
-            last_key_rank = key_rank
-            k = self.complement_key[complement_key_rank]
-            key_rank = (key_rank + ord(k)) % len(self.key)
-
-            # if back to beginning of key
-            if key_rank <= last_key_rank:
-                # access next character of complement key
-                complement_key_rank = (complement_key_rank + 1) \
-                    % len(self.complement_key)
-
-        return word_decoded
 
     def process_file(self, input_path, output_path, action, indent=0):
         '''Processes one file (either for encoding or decoding).
@@ -344,6 +312,18 @@ class Medusa(object):
                 shutil.make_archive(output_path, 'zip', output_path)
 
 
+def input_params(algo):
+    required = ALGORITHMS[algo][0]
+    params = dict()
+    print(ShellColors.BLUE + '[Medusa] Set params:')
+    for param in required():
+        prompt = '>> {}: '.format(param.title().replace('_', ' '))
+        tmp = getpass.getpass(prompt=prompt)
+        params[param] = tmp
+    print(ShellColors.ENDC)
+    return params
+
+
 def main(args=None):
     if args is None:
         parser = argparse.ArgumentParser()
@@ -351,6 +331,7 @@ def main(args=None):
         actions_parser.add_argument('-e', '--encode', action='store_true')
         actions_parser.add_argument('-d', '--decode', action='store_true')
 
+        parser.add_argument('-a', '--algo', type=str, required=True)
         parser.add_argument('-i', '--input', type=str, required=True)
         parser.add_argument('-o', '--output', type=str, required=True)
         parser.add_argument('--exclude', type=str, default=[], nargs='+')
@@ -360,6 +341,9 @@ def main(args=None):
         args = parse_args(parser.parse_args())
         base_path = None
     else:
+        if 'algo' not in args:
+            print('[Medusa - Error] Missing argument: algo.')
+            return
         if 'input' not in args:
             print('[Medusa - Error] Missing argument: input.')
             return
@@ -393,6 +377,7 @@ def main(args=None):
         log += '-------------------------------------\n'
         log += ShellColors.ENDC
         log += 'Working on: {}\n'.format(args['input'])
+        log += 'Algorithm: {}\n'.format(args['algo'])
         print(log)
 
     # check for overwrite problems: if decoding, ask to overwrite already existing file
@@ -402,46 +387,20 @@ def main(args=None):
             q = input(ShellColors.YELLOW +
                       'Overwrite existing data? (y/n) ' + ShellColors.ENDC)
             # if overwriting allowed
-            if q == 'y':
-                # get keys
-                key = getpass.getpass(prompt='Encoding key: ')
-                complement_key = getpass.getpass(prompt='Complement key: ')
-                # decode
-                processor = Medusa(key, complement_key,
-                                   exclude=args['exclude'],
-                                   verbose=args['verbose'],
-                                   base_path=base_path)
-                processor.process(args)
-            # else do nothing
-            else:
+            if q != 'y':
                 print(ShellColors.RED +
                       'No data overwriting. Process aborted.' + ShellColors.ENDC)
-        else:
-            # get keys
-            key = getpass.getpass(prompt='Encoding key: ')
-            complement_key = getpass.getpass(prompt='Complement key: ')
-            # decode
-            processor = Medusa(key, complement_key,
-                               exclude=args['exclude'],
-                               verbose=args['verbose'],
-                               base_path=base_path)
-            processor.process(args)
+                return
 
-    else:
-        # get keys
-        key = getpass.getpass(prompt='Encoding key: ')
-        complement_key = getpass.getpass(prompt='Complement key: ')
-        # if encoding, check for secure password
-        if (len(key) == 0 or len(complement_key) == 0) and args['verbose']:
-            print(ShellColors.RED +
-                  'Password not secure. Process aborted.' + ShellColors.ENDC)
-        else:
-            # encode
-            processor = Medusa(key, complement_key,
-                               exclude=args['exclude'],
-                               verbose=args['verbose'],
-                               base_path=base_path)
-            processor.process(args)
+    # get params
+    params = input_params(args['algo'])
+    # encode
+    processor = Medusa(algo=args['algo'],
+                       params=params,
+                       exclude=args['exclude'],
+                       verbose=args['verbose'],
+                       base_path=base_path)
+    processor.process(args)
 
     if args['verbose']:
         print('-------------------------------------\n' + ShellColors.ENDC)

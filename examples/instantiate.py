@@ -27,7 +27,9 @@
 from medusa import Medusa
 
 if __name__ == '__main__':
-    processor = Medusa('key', 'complement_key')
+    processor = Medusa(algo='vigenere',
+                       params=dict(key='key',
+                                   complement_key='complement_key'))
 
     # ENCODING
     # encode a string directly
