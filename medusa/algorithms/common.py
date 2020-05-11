@@ -23,4 +23,98 @@
 # [Medusa] Mini Encoding/Decoding Utility with Simple Algorithms
 # ------------------------------------------------------------------------------
 
+__author__ = 'Mina Pêcheux'
+__copyright__ = 'Copyright 2020, Mina Pêcheux'
+
 ALPHABET = [chr(x) for x in range(256)]
+
+
+class Algorithm(object):
+
+    def __init__(self, params):
+        '''Creates a new instance of this algorithm.
+
+        Parameters
+        ----------
+        params : dict
+            Params to use for processing.
+        '''
+        self.params = params
+        self.ctx = {}
+
+    @staticmethod
+    def get_params():
+        '''List of params that are required for the algorithm.
+
+        Returns
+        -------
+        dict
+            Dict of parameters: required, for encoding, for decoding...
+        '''
+        return {}
+
+    def transform_params(self, params):
+        '''Specific params transformer to prepare context args for processing.
+        (Modifies the params dict in-place)
+
+        Parameters
+        ----------
+        params : dict
+            Processing context.
+        '''
+        pass
+
+    def check_secure(self, action=None):
+        '''Checks if the params are secured enough for processing.
+
+        Returns
+        -------
+        (bool, str)
+            Whether or not the params are valid and error message to warn the user.
+        '''
+        return True, None
+
+    def get_ctx(self):
+        '''Returns the algorithm context (may contain additional information after
+        processing).
+
+        Returns
+        -------
+        dict
+            Context dict.
+        '''
+        return self.ctx
+
+    def encode(self, content, params):
+        '''Encodes a string using this algorithm.
+
+        Parameters
+        ----------
+        content : str
+            Content to encode.
+        params : dict
+            Processing context.
+
+        Returns
+        -------
+        str
+            Encoded content.
+        '''
+        raise NotImplementedError('Must provide a specific encoding function.')
+
+    def decode(self, content, params):
+        '''Decodes a string using this algorithm.
+
+        Parameters
+        ----------
+        content : str
+            Content to decode.
+        params : dict
+            Processing context.
+
+        Returns
+        -------
+        str
+            Decoded content.
+        '''
+        raise NotImplementedError('Must provide a specific decoding function.')

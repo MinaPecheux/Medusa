@@ -26,73 +26,29 @@
 __author__ = 'Mina Pêcheux'
 __copyright__ = 'Copyright 2020, Mina Pêcheux'
 
-from .common import ALPHABET
+from .common import Algorithm, ALPHABET
 
 
-def required_params():
-    '''List of params that are required for the Caesar process.
+class Caesar(Algorithm):
 
-    Returns
-    -------
-    list(str)
-        List of required parameters.
-    '''
-    return ['shift']
+    @staticmethod
+    def get_params():
+        return {'common': {'required': ['shift']}}
 
+    def transform_params(self, params):
+        params['shift'] = int(params['shift'])
 
-def check_secure(params):
-    '''Checks if the params are secured enough for a Caesar process.
+    def check_secure(self, action=None):
+        if self.params['shift'] == 0:
+            return False, '"shift" cannot be zero'
+        return True, None
 
-    Parameters
-    ----------
-    params : dict
-        Params to use for processing.
+    def encode(self, content, params):
+        shift = params['shift']
+        return ''.join([ALPHABET[(ALPHABET.index(c) + shift) % len(ALPHABET)]
+                        for c in content])
 
-    Returns
-    -------
-    (bool, str)
-        Whether or not the params are valid and error message to warn the user.
-    '''
-    if params['shift'] == 0:
-        return False, '"shift" cannot be zero'
-    return True, None
-
-
-def encode(content, params):
-    '''Encodes a string using the Caesar technique.
-
-    Parameters
-    ----------
-    content : str
-        Content to encode.
-    params : dict
-        Params to use for processing.
-
-    Returns
-    -------
-    str
-        Encoded content.
-    '''
-    shift = params['shift']
-    return ''.join([ALPHABET[(ALPHABET.index(c) + shift) % len(ALPHABET)]
-                    for c in content])
-
-
-def decode(content, params):
-    '''Decodes a string using the Caesar technique.
-
-    Parameters
-    ----------
-    content : str
-        Content to decode.
-    params : dict
-        Params to use for processing.
-
-    Returns
-    -------
-    str
-        Decoded content.
-    '''
-    shift = params['shift']
-    return ''.join([ALPHABET[(ALPHABET.index(c) - shift) % len(ALPHABET)]
-                    for c in content])
+    def decode(self, content, params):
+        shift = params['shift']
+        return ''.join([ALPHABET[(ALPHABET.index(c) - shift) % len(ALPHABET)]
+                        for c in content])

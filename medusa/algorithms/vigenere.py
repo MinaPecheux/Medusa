@@ -26,7 +26,7 @@
 __author__ = 'Mina Pêcheux'
 __copyright__ = 'Copyright 2020, Mina Pêcheux'
 
-from .common import ALPHABET
+from .common import Algorithm, ALPHABET
 
 ENCODE_TABLE = {
     c: {c2: ALPHABET[(j + i) % len(ALPHABET)]
@@ -40,113 +40,66 @@ DECODE_TABLE = {
 }
 
 
-def required_params():
-    '''List of params that are required for the Vigenere process.
+class Vigenere(Algorithm):
 
-    Returns
-    -------
-    list(str)
-        List of required parameters.
-    '''
-    return ['key', 'complement_key']
+    @staticmethod
+    def get_params():
+        return {'common': {'required': ['key', 'complement_key']}}
 
+    def check_secure(self, action=None):
+        if len(self.params['key']) == 0:
+            return False, '"key" cannot be empty'
+        if len(self.params['complement_key']) == 0:
+            return False, '"complement_key" cannot be empty'
+        return True, None
 
-def check_secure(params):
-    '''Checks if the params are secured enough for a Vigenere process.
+    def encode(self, content, params):
+        key = params['key']
+        complement_key = params['complement_key']
 
-    Parameters
-    ----------
-    params : dict
-        Params to use for processing.
+        key_rank = 0                # counter that goes through the characters of the key
+        complement_key_rank = 0     # counter that goes through the complement key
+        encoded = ''                # result content
+        # go through the characters of the content to code
+        for c in content:
+            # apply Vigenere method
+            row = ENCODE_TABLE[key[key_rank]]
+            encoded += row[c]
 
-    Returns
-    -------
-    (bool, str)
-        Whether or not the params are valid and error message to warn the user.
-    '''
-    if len(params['key']) == 0:
-        return False, '"key" cannot be empty'
-    if len(params['complement_key']) == 0:
-        return False, '"complement_key" cannot be empty'
-    return True, None
+            # access new character of the key
+            last_key_rank = key_rank
+            k = complement_key[complement_key_rank]
+            key_rank = (key_rank + ord(k)) % len(key)
 
+            # if back to beginning of key
+            if key_rank <= last_key_rank:
+                # access next character of complement key
+                complement_key_rank = (complement_key_rank + 1) \
+                    % len(complement_key)
 
-def encode(content, params):
-    '''Encodes a string using the Vigenere technique.
+        return encoded
 
-    Parameters
-    ----------
-    content : str
-        Content to encode.
-    params : dict
-        Params to use for processing.
+    def decode(self, content, params):
+        key = params['key']
+        complement_key = params['complement_key']
 
-    Returns
-    -------
-    str
-        Encoded content.
-    '''
-    key = params['key']
-    complement_key = params['complement_key']
+        key_rank = 0                # counter that goes through the characters of the key
+        complement_key_rank = 0     # counter that goes through the complement key
+        decoded = ''                # result content
+        # go through the characters of the content to decode
+        for c in content:
+            row = DECODE_TABLE[key[key_rank]]
+            decoded += row[c]
 
-    key_rank = 0                # counter that goes through the characters of the key
-    complement_key_rank = 0     # counter that goes through the complement key
-    encoded = ''                # result content
-    # go through the characters of the content to code
-    for c in content:
-        # apply Vigenere method
-        row = ENCODE_TABLE[key[key_rank]]
-        encoded += row[c]
+            # access new character of the key
+            last_key_rank = key_rank
+            k = complement_key[complement_key_rank]
+            key_rank = (key_rank + ord(k)) % len(key)
 
-        # access new character of the key
-        last_key_rank = key_rank
-        k = complement_key[complement_key_rank]
-        key_rank = (key_rank + ord(k)) % len(key)
+            # if back to beginning of key
+            if key_rank <= last_key_rank:
+                # access next character of complement key
+                complement_key_rank = (complement_key_rank + 1) \
+                    % len(complement_key)
 
-        # if back to beginning of key
-        if key_rank <= last_key_rank:
-            # access next character of complement key
-            complement_key_rank = (complement_key_rank + 1) \
-                % len(complement_key)
-
-    return encoded
-
-
-def decode(content, params):
-    '''Decodes a string using the Vigenere technique.
-
-    Parameters
-    ----------
-    content : str
-        Content to decode.
-    params : dict
-        Params to use for processing.
-
-    Returns
-    -------
-    str
-        Decoded content.
-    '''
-    key = params['key']
-    complement_key = params['complement_key']
-
-    key_rank = 0                # counter that goes through the characters of the key
-    complement_key_rank = 0     # counter that goes through the complement key
-    decoded = ''                # result content
-    # go through the characters of the content to decode
-    for c in content:
-        row = DECODE_TABLE[key[key_rank]]
-        decoded += row[c]
-
-        # access new character of the key
-        last_key_rank = key_rank
-        k = complement_key[complement_key_rank]
-        key_rank = (key_rank + ord(k)) % len(key)
-
-        # if back to beginning of key
-        if key_rank <= last_key_rank:
-            # access next character of complement key
-            complement_key_rank = (complement_key_rank + 1) \
-                % len(complement_key)
-
-    return decoded
+        return decoded

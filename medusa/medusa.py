@@ -84,39 +84,74 @@ class Medusa(object):
         exit_on_error : bool, optional
             Whether or not to sys exit if object could not be instantiated (true by default).
         '''
-        required_params, checker, encoder, decoder = ALGORITHMS[algo]
-        missing_params = [p for p in required_params() if p not in params]
-        if len(missing_params) > 0:
-            msg = 'Invalid parameters: algorithm "{}" requires:'.format(algo)
-            print('[Medusa - Error] {}'.format(msg))
-            for param in missing_params:
-                print('-', param)
-            if exit_on_error:
-                sys.exit(1)
-            else:
-                return
-
-        # if encoding, check for secure password
-        check, error = checker(params)
-        if not check:
-            print('[Medusa - Error] {}'.format(error))
-            if exit_on_error:
-                sys.exit(1)
-            else:
-                return
-
-        self.algo = algo
+        self.algo = ALGORITHMS[algo](params)
+        self.algo_params = ALGORITHMS[algo].get_params()
         self.params = params
         self.exclude = exclude
         self.verbose = verbose
+        self.exit_on_error = exit_on_error
 
-        self.encode = lambda content: encoder(content, self.params)
-        self.decode = lambda content: decoder(content, self.params)
+        if not self._check_missing_params():
+            return
+        if not self._check_secure_params():
+            return
+
+        self.encode = self._wrap_processor(self.algo.encode, 'encode')
+        self.decode = self._wrap_processor(self.algo.decode, 'decode')
 
         if base_path is None:
             self.base_path = os.path.abspath(os.path.dirname(sys.argv[0]))
         else:
             self.base_path = base_path
+
+    def _check_missing_params(self, action=None):
+        '''Checks if the object has all necessary args for required action.'''
+        req_params = self.algo_params.get('common', {}).get('required', [])
+        if action is not None:
+            req_params += self.algo_params.get(action, {}).get('required', [])
+        missing_params = [p for p in req_params if p not in self.params]
+        if len(missing_params) > 0:
+            msg = 'Invalid parameters: algorithm "{}" requires:'.format(
+                self.algo)
+            print('[Medusa - Error] {}'.format(msg))
+            for param in missing_params:
+                print('-', param)
+            if self.exit_on_error:
+                sys.exit(1)
+            else:
+                return False
+        return True
+
+    def _check_secure_params(self, action=None):
+        '''Checks if the object has secure params for required action.'''
+        check, error = self.algo.check_secure(action=action)
+        if not check:
+            print('[Medusa - Error] {}'.format(error))
+            if self.exit_on_error:
+                sys.exit(1)
+            else:
+                return False
+        return True
+
+    def _wrap_processor(self, func, action):
+        '''Wraps a processing function with auto check of params, auto update of
+        params with object-specific values...'''
+        def _wrapped(content, **kwargs):
+            if not self._check_missing_params(action=action):
+                return
+            if not self._check_secure_params(action=action):
+                return
+            params = self.params.copy()
+            params.update(kwargs)
+            self.algo.transform_params(params)
+            res = func(content, params)
+            if action == 'decode' and not isinstance(res, str):
+                res = res.decode()
+
+            for k, v in self.algo.ctx.items():
+                print('[{:>6}] {}'.format(k.title().replace('_', ' '), v))
+            return res
+        return _wrapped
 
     def process_file(self, input_path, output_path, action, indent=0):
         '''Processes one file (either for encoding or decoding).
@@ -143,19 +178,32 @@ class Medusa(object):
         if self.verbose:
             print('\n{}> {}'.format(ind, os.path.basename(input_path)))
 
-        with open(input_path, 'r') as FILE_READ:
-            content = FILE_READ.read()
+        try:
+            with open(input_path, 'r') as FILE_READ:
+                content = FILE_READ.read()
+        except UnicodeDecodeError:
+            with open(input_path, 'rb') as FILE_READ:
+                content = FILE_READ.read()
 
-        # encryption
+        # process
         if action == 'encode':
-            # write encoded file
-            with open(output_path, 'w') as FILE_WRITE:
-                FILE_WRITE.write(self.encode(content))
-        # decryption
+            res = self.encode(content)
         elif action == 'decode':
-            # write decoded file
+            res = self.decode(content)
+
+        # write encoded file
+        if isinstance(res, str):
             with open(output_path, 'w') as FILE_WRITE:
-                FILE_WRITE.write(self.decode(content))
+                FILE_WRITE.write(res)
+        elif isinstance(res, bytes):
+            with open(output_path, 'wb') as FILE_WRITE:
+                FILE_WRITE.write(res)
+        else:
+            i = os.path.basename(input_path)
+            print(
+                '[Medusa - Error] Invalid processing: could not write output for "{}".'.format(i))
+            if self.exit_on_error:
+                sys.exit(1)
 
     def encode_file(self, input_path, output_path):
         '''Encodes one file.
@@ -312,11 +360,13 @@ class Medusa(object):
                 shutil.make_archive(output_path, 'zip', output_path)
 
 
-def input_params(algo):
-    required = ALGORITHMS[algo][0]
+def input_params(algo, action):
     params = dict()
     print(ShellColors.BLUE + '[Medusa] Set params:')
-    for param in required():
+    ref_params = ALGORITHMS[algo].get_params()
+    req_params = ref_params.get('common', {}).get('required', []) + \
+        ref_params.get(action, {}).get('required', [])
+    for param in req_params:
         prompt = '>> {}: '.format(param.title().replace('_', ' '))
         tmp = getpass.getpass(prompt=prompt)
         params[param] = tmp
@@ -339,7 +389,6 @@ def main(args=None):
         parser.add_argument('-v', '--verbose', action='store_true')
 
         args = parse_args(parser.parse_args())
-        base_path = None
     else:
         if 'algo' not in args:
             print('[Medusa - Error] Missing argument: algo.')
@@ -365,9 +414,8 @@ def main(args=None):
         if 'verbose' not in args:
             args['verbose'] = False
 
-        previous_frame = inspect.currentframe().f_back
-        base_path = os.path.abspath(os.path.dirname(
-            inspect.getframeinfo(previous_frame)[0]))
+    base_path = os.path.abspath(os.path.dirname(
+        os.path.dirname(inspect.stack()[0].filename)))
 
     # display info
     if args['verbose']:
@@ -393,7 +441,7 @@ def main(args=None):
                 return
 
     # get params
-    params = input_params(args['algo'])
+    params = input_params(args['algo'], args['action'])
     # encode
     processor = Medusa(algo=args['algo'],
                        params=params,

@@ -26,23 +26,10 @@
 __author__ = 'Mina Pêcheux'
 __copyright__ = 'Copyright 2020, Mina Pêcheux'
 
-from .caesar import (required_params as required_params_caesar,
-                     check_secure as check_secure_caesar,
-                     encode as encode_caesar,
-                     decode as decode_caesar)
+from .aes import Aes
+from .caesar import Caesar
+from .vigenere import Vigenere
 
-from .vigenere import (required_params as required_params_vigenere,
-                       check_secure as check_secure_vigenere,
-                       encode as encode_vigenere,
-                       decode as decode_vigenere)
-
-ALGORITHMS = dict(
-    caesar=(required_params_caesar,
-            check_secure_caesar,
-            encode_caesar,
-            decode_caesar),
-    vigenere=(required_params_vigenere,
-              check_secure_vigenere,
-              encode_vigenere,
-              decode_vigenere)
-)
+ALGORITHMS = dict(aes=Aes,
+                  caesar=Caesar,
+                  vigenere=Vigenere)
