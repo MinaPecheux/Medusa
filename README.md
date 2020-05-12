@@ -25,14 +25,17 @@ This will install the Python lib and also a command-line `medusa` to run it dire
 To encrypt a file or a folder, use the Medusa CLI with the `-e` or `--encrypt` argument:
 
 ```
-medusa -e --algo vigenere -i <input_path> -o <output_path>
+medusa -e cli --algo vigenere -i <input_path> -o <output_path>
 ```
 
 To decrypt a file or a folder, use the Medusa CLI with the `-d` or `--decrypt` argument:
 
 ```
-medusa -d --algo vigenere -i <input_path> -o <output_path>
+medusa -d cli --algo vigenere -i <input_path> -o <output_path>
 ```
+
+_Note: be careful that the Medusa CLI uses a subcommand `cli` for direct arguments passing. This is because the CLI
+also allows for a config file-based set up (see below for more details)._
 
 The module will automatically detect whether the input path is a file or a folder; if it is a folder, the directory will be processed recursively.
 
@@ -43,7 +46,7 @@ The module will automatically detect whether the input path is a file or a folde
 If you want process a folder and you want the processed output to be zipped automatically, simply add the `-z` or `--zip` argument!
 
 ```
-medusa -e -a vigenere -i <input_path> -o <output_path> --zip
+medusa -e cli -a vigenere -i <input_path> -o <output_path> --zip
 ```
 
 ### Exclude specific files or folders
@@ -51,7 +54,7 @@ medusa -e -a vigenere -i <input_path> -o <output_path> --zip
 You can also ignore specific files or folders by passing a list of names in the `--exclude` argument:
 
 ```
-medusa -e -a vigenere -i <input_path> -o <output_path> --exclude __pycache__ .DS_Store
+medusa -e cli -a vigenere -i <input_path> -o <output_path> --exclude __pycache__ .DS_Store
 ```
 
 ### Verbose mode
@@ -59,8 +62,44 @@ medusa -e -a vigenere -i <input_path> -o <output_path> --exclude __pycache__ .DS
 To get more details on the process, enable the verbose logging mode with the `-v` or `--verbose` argument:
 
 ```
-medusa -e -a vigenere -i <input_path> -o <output_path> -v
+medusa -e cli -a vigenere -i <input_path> -o <output_path> -v
 ```
+
+## Configuration file
+
+It is often easier to write all of your settings in a config file and to then simply load this file upon CLI execution.
+Medusa allows you to run the CLI with the `config` subcommand (rather than the `cli` subcommand as before):
+
+```
+medusa (-e | -d) config <config_file_path>
+```
+
+A Medusa
+config file is of the following form:
+
+    [encode]
+    input = utests/data/input.txt
+    output = utests/data/output.txt
+    algo = vigenere
+    zip = true # or "TRUE", or "True"
+
+    [decode]
+    input = utests/data/output.txt
+    output = utests/data/new.txt
+    algo = vigenere
+
+_Note: You can write the `[encode]` and `[decode]` parts in whichever order you prefer, and you don't need to put spaces around the equal signs._
+
+Here are the available settings (for each `[encode]` and `[decode]` part). Some are required (they are marked with a `*` sign below) while others are optional (they have default values):
+
+| Parameter  | Description                                                              | Default    |
+|------------|--------------------------------------------------------------------------|------------|
+| `input` *  | Path to the input file or dir to process.                                |    -       |
+| `output` * | Path to the output file or dir (where to write the processed data).      |    -       |
+| `algo` *   | Algorithm to use for the encode/decode process.                          |    -       |
+| `exclude`  | List of files or folders to ignore during processing.                    | empty list |
+| `zip`      | If true, create a zip with the processed data (only for dir processing). | `false`    |
+| `verbose`  | If true, print additional logs during process.                           | `false`    |
 
 ## Script usage
 

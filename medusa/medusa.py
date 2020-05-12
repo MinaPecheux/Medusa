@@ -35,6 +35,7 @@ import sys
 from time import sleep
 from tqdm import tqdm
 
+from .config import load_config
 from .algorithms import ALGORITHMS
 
 
@@ -52,16 +53,21 @@ def parse_args(args):
         action = 'decode'
     elif args.encode:
         action = 'encode'
-    parsed = dict(
-        algo=args.algo,
-        input=args.input,
-        output=args.output,
-        action=action,
-        exclude=args.exclude,
-        zip=args.zip,
-        verbose=args.verbose
-    )
-    return parsed
+
+    if 'config_file' in args:
+        config = load_config(args.config_file)[action]
+        config['action'] = action
+    else:
+        config = dict(
+            algo=args.algo,
+            input=args.input,
+            output=args.output,
+            action=action,
+            exclude=args.exclude,
+            zip=args.zip,
+            verbose=args.verbose
+        )
+    return config
 
 
 class Medusa(object):
@@ -379,16 +385,31 @@ def input_params(algo, action):
 def main(args=None):
     if args is None:
         parser = argparse.ArgumentParser()
+        subparsers = parser.add_subparsers()
+
         actions_parser = parser.add_mutually_exclusive_group(required=True)
         actions_parser.add_argument('-e', '--encode', action='store_true')
         actions_parser.add_argument('-d', '--decode', action='store_true')
 
-        parser.add_argument('-a', '--algo', type=str, required=True)
-        parser.add_argument('-i', '--input', type=str, required=True)
-        parser.add_argument('-o', '--output', type=str, required=True)
-        parser.add_argument('--exclude', type=str, default=[], nargs='+')
-        parser.add_argument('-z', '--zip', action='store_true')
-        parser.add_argument('-v', '--verbose', action='store_true')
+        # config file-base parser
+        config_parser = subparsers.add_parser('config')
+        config_parser.add_argument('config_file', type=str)
+
+        # full cli parser
+        cli_parser = subparsers.add_parser('cli')
+        cli_parser.add_argument('-a', '--algo', type=str, required=True,
+                                help='Algorithm to use for the encode/decode process.')
+        cli_parser.add_argument('-i', '--input', type=str, required=True,
+                                help='Path to the input file or dir to process.')
+        cli_parser.add_argument('-o', '--output', type=str, required=True,
+                                help='Path to the output file or dir (where to write the processed data).')
+
+        cli_parser.add_argument('--exclude', type=str, default=[], nargs='+',
+                                help='List of files or folders to ignore during processing.')
+        cli_parser.add_argument('-z', '--zip', action='store_true',
+                                help='If true, create a zip with the processed data (only for dir processing).')
+        cli_parser.add_argument('-v', '--verbose', action='store_true',
+                                help='If true, print additional logs during process.')
 
         args = parse_args(parser.parse_args())
     else:

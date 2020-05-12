@@ -1,0 +1,10 @@
+[encode]
+input = utests/data/input_dir
+output = utests/data/output_dir
+algo = vigenere
+zip = TRUE
+
+[decode]
+input = utests/data/output.txt
+output = utests/data/new.txt
+algo = vigenere
