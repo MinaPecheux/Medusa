@@ -12,9 +12,9 @@ For now, Medusa offers 4 encoding/decoding algorithms:
 - the [Vigenere cipher](https://en.wikipedia.org/wiki/Vigen%C3%A8re_cipher): a symmetric polyalphabetic cryptography
   method that uses a key and a complement key
 - the [Advanced Encryption Standard (AES)](https://en.wikipedia.org/wiki/Advanced_Encryption_Standard): a symmetric
-  cypher (here, it uses a key that is derived into an initial integer value)
+  cipher (here, it uses a key that is derived into an initial integer value)
 - the [Rivest-Shamir-Adleman (RSA)](https://en.wikipedia.org/wiki/RSA_(cryptosystem)) algorithm: an asymmetric
-  cypher with a public and a private key
+  cipher with a public and a private key
 
 _Note: to make it harder to decypher, Medusa uses a wide range of characters including Unicode characters... so it requires Python 3 to work._
 
