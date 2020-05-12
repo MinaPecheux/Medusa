@@ -93,6 +93,15 @@ def derive_key_from_pwd(password, salt):
 
 class Aes(Algorithm):
 
+    def __init__(self, params):
+        super().__init__(params)
+
+        # set context
+        self.iv_int = bytes_to_int(os.urandom(16))
+        self.salt = os.urandom(16)
+        self.ctx['iv'] = self.iv_int
+        self.ctx['salt'] = bytes_to_int(self.salt)
+
     @staticmethod
     def get_params():
         return {'common': {'required': ['password']},
@@ -115,16 +124,10 @@ class Aes(Algorithm):
         return True, None
 
     def encode(self, content, params):
-        iv = os.urandom(16)
-        iv_int = bytes_to_int(iv)
-        ctr = Counter.new(AES.block_size * 8, initial_value=iv_int)
-        salt = os.urandom(16)
-        key = derive_key_from_pwd(params['password'], salt)
+        ctr = Counter.new(AES.block_size * 8, initial_value=self.iv_int)
+        key = derive_key_from_pwd(params['password'], self.salt)
         aes = AES.new(key, AES.MODE_CTR, counter=ctr)
         encoded = aes.encrypt(content)
-
-        self.ctx['iv'] = iv_int
-        self.ctx['salt'] = bytes_to_int(salt)
         return encoded
 
     def decode(self, content, params):
