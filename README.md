@@ -123,12 +123,26 @@ if __name__ == '__main__':
     print('Hello world.')
 
     # run Medusa with some basic args
-    medusa(dict(
-        algo='vigenere',
-        input='../utests/data/input.txt',
-        output='../utests/data/output.txt',
-        action='encode'
-    ))
+    medusa(algo='vigenere',
+           input='../utests/data/input.txt',
+           output='../utests/data/output.txt',
+           action='encode')
+
+    # wrap up with some other thing
+    print('Goodbye world.')
+```
+
+You can also pass a path to a configuration file, like with the CLI:
+
+```py
+from medusa import medusa
+
+if __name__ == '__main__':
+    # do some stuff...
+    print('Hello world.')
+
+    # run Medusa with a config file
+    medusa(config='.medusa', action='encode')
 
     # wrap up with some other thing
     print('Goodbye world.')

@@ -30,9 +30,7 @@ class TestFile():
 
     @pytest.mark.parametrize('params', tests, ids=test_ids)
     def test_basic(self, params):
-        processor = Medusa(algo='vigenere',
-                           params=dict(key='key',
-                                       complement_key='complement_key'))
+        processor = Medusa(algo='caesar', params=dict(shift=1))
         input_path = os.path.join(INPUT_DIR, params['input'])
         output_path = os.path.join(OUTPUT_DIR, params['output'])
         reencode_path = os.path.join(OUTPUT_DIR, params['reencode'])

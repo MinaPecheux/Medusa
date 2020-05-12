@@ -74,8 +74,6 @@ def parse_config(lines, block):
 
 
 def load_config(config_file=None):
-    if config_file is None:
-        config_file = '.medusa'
     if not os.path.abspath(config_file):
         config_file = os.path.join(os.getcwd(), config_file)
 

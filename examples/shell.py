@@ -31,12 +31,10 @@ if __name__ == '__main__':
     print('Hello world.')
 
     # run Medusa with some basic args
-    medusa(dict(
-        algo='vigenere',
-        input='../utests/data/input.txt',
-        output='../utests/data/output.txt',
-        action='encode'
-    ))
+    medusa(algo='vigenere',
+           input='../utests/data/input.txt',
+           output='../utests/data/output.txt',
+           action='encode')
 
     # wrap up with some other thing
     print('Goodbye world.')

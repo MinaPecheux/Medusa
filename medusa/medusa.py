@@ -382,8 +382,8 @@ def input_params(algo, action):
     return params
 
 
-def main(args=None):
-    if args is None:
+def main(**args):
+    if len(args) == 0:
         parser = argparse.ArgumentParser()
         subparsers = parser.add_subparsers()
 
@@ -413,6 +413,11 @@ def main(args=None):
 
         args = parse_args(parser.parse_args())
     else:
+        if 'config' in args:
+            action = args['action']
+            args = load_config(args['config'])[action]
+            args['action'] = action
+
         if 'algo' not in args:
             print('[Medusa - Error] Missing argument: algo.')
             return
@@ -437,8 +442,13 @@ def main(args=None):
         if 'verbose' not in args:
             args['verbose'] = False
 
-    base_path = os.path.abspath(os.path.dirname(
-        os.path.dirname(inspect.stack()[0].filename)))
+    st = inspect.stack()
+    if len(st) == 2:
+        base_path = os.path.abspath(os.path.dirname(
+            os.path.dirname(inspect.stack()[0].filename)))
+    else:
+        base_path = os.path.abspath(os.path.dirname(
+            inspect.stack()[1].filename))
 
     # display info
     if args['verbose']:
@@ -475,3 +485,5 @@ def main(args=None):
 
     if args['verbose']:
         print('-------------------------------------\n' + ShellColors.ENDC)
+
+    return args
