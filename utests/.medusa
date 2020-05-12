@@ -1,0 +1,9 @@
+[encode]
+input = data/input.txt
+output = data/output.txt
+algo = vigenere
+
+[decode]
+input = data/output.txt
+output = data/new.txt
+algo = vigenere
