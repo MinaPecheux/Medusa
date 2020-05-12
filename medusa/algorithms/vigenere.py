@@ -42,14 +42,16 @@ DECODE_TABLE = {
 
 class Vigenere(Algorithm):
 
+    _name = 'vigenere'
+
     @staticmethod
     def get_params():
         return {'common': {'required': ['key', 'complement_key']}}
 
-    def check_secure(self, action=None):
-        if len(self.params['key']) == 0:
+    def check_secure(self, params, action=None):
+        if len(params['key']) == 0:
             return False, '"key" cannot be empty'
-        if len(self.params['complement_key']) == 0:
+        if len(params['complement_key']) == 0:
             return False, '"complement_key" cannot be empty'
         return True, None
 

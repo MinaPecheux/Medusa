@@ -93,8 +93,10 @@ def derive_key_from_pwd(password, salt):
 
 class Aes(Algorithm):
 
-    def __init__(self, params):
-        super().__init__(params)
+    _name = 'aes'
+
+    def __init__(self):
+        super().__init__()
 
         # set context
         self.iv_int = bytes_to_int(os.urandom(16))
@@ -113,13 +115,13 @@ class Aes(Algorithm):
         if 'salt' in params:
             params['salt'] = int_to_bytes(int(params['salt']))
 
-    def check_secure(self, action=None):
-        if len(self.params['password']) == 0:
+    def check_secure(self, params, action=None):
+        if len(params['password']) == 0:
             return False, '"password" cannot be empty'
         if action == 'decode':
-            if len(self.params['iv']) == 0:
+            if len(str(params['iv'])) == 0:
                 return False, '"iv" cannot be empty'
-            if len(self.params['salt']) == 0:
+            if len(str(params['salt'])) == 0:
                 return False, '"salt" cannot be empty'
         return True, None
 

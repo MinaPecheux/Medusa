@@ -91,16 +91,16 @@ class Medusa(object):
         exit_on_error : bool, optional
             Whether or not to sys exit if object could not be instantiated (true by default).
         '''
-        self.algo = ALGORITHMS[algo](params)
+        self.algo = ALGORITHMS[algo]()
         self.algo_params = ALGORITHMS[algo].get_params()
         self.params = params
         self.exclude = exclude
         self.verbose = verbose
         self.exit_on_error = exit_on_error
 
-        if not self._check_missing_params():
+        if not self._check_missing_params(self.params):
             return
-        if not self._check_secure_params():
+        if not self._check_secure_params(self.params):
             return
 
         self.encode = self._wrap_processor(self.algo.encode, 'encode')
@@ -111,15 +111,15 @@ class Medusa(object):
         else:
             self.base_path = base_path
 
-    def _check_missing_params(self, action=None):
+    def _check_missing_params(self, params, action=None):
         '''Checks if the object has all necessary args for required action.'''
         req_params = self.algo_params.get('common', {}).get('required', [])
         if action is not None:
             req_params += self.algo_params.get(action, {}).get('required', [])
-        missing_params = [p for p in req_params if p not in self.params]
+        missing_params = [p for p in req_params if p not in params]
         if len(missing_params) > 0:
             msg = 'Invalid parameters: algorithm "{}" requires:'.format(
-                self.algo)
+                self.algo._name)
             print('[Medusa - Error] {}'.format(msg))
             for param in missing_params:
                 print('-', param)
@@ -129,9 +129,9 @@ class Medusa(object):
                 return False
         return True
 
-    def _check_secure_params(self, action=None):
+    def _check_secure_params(self, params, action=None):
         '''Checks if the object has secure params for required action.'''
-        check, error = self.algo.check_secure(action=action)
+        check, error = self.algo.check_secure(params, action=action)
         if not check:
             print('[Medusa - Error] {}'.format(error))
             if self.exit_on_error:
@@ -150,12 +150,12 @@ class Medusa(object):
         params with object-specific values...'''
         def _wrapped(content, **kwargs):
             __is_direct = kwargs.pop('__is_direct', True)
-            if not self._check_missing_params(action=action):
-                return
-            if not self._check_secure_params(action=action):
-                return
             params = self.params.copy()
             params.update(kwargs)
+            if not self._check_missing_params(params, action=action):
+                return
+            if not self._check_secure_params(params, action=action):
+                return
             self.algo.transform_params(params)
             res = func(content, params)
             if action == 'decode' and not isinstance(res, str):
@@ -165,6 +165,16 @@ class Medusa(object):
                 self._print_context()
             return res
         return _wrapped
+
+    def get_context(self):
+        '''Returns the current context of this object's algorithm.
+
+        Returns
+        -------
+        dict
+            Current algorithm context.
+        '''
+        return self.algo.ctx
 
     def process_file(self, input_path, output_path, action, indent=0):
         '''Processes one file (either for encoding or decoding).

@@ -31,15 +31,10 @@ ALPHABET = [chr(x) for x in range(256)]
 
 class Algorithm(object):
 
-    def __init__(self, params):
-        '''Creates a new instance of this algorithm.
+    _name = ''
 
-        Parameters
-        ----------
-        params : dict
-            Params to use for processing.
-        '''
-        self.params = params
+    def __init__(self):
+        '''Creates a new instance of this algorithm.'''
         self.ctx = {}
 
     @staticmethod
@@ -64,8 +59,13 @@ class Algorithm(object):
         '''
         pass
 
-    def check_secure(self, action=None):
+    def check_secure(self, params, action=None):
         '''Checks if the params are secured enough for processing.
+
+        Parameters
+        ----------
+        params : dict
+            Processing context.
 
         Returns
         -------

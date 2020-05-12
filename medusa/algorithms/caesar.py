@@ -31,6 +31,8 @@ from .common import Algorithm, ALPHABET
 
 class Caesar(Algorithm):
 
+    _name = 'caesar'
+
     @staticmethod
     def get_params():
         return {'common': {'required': ['shift']}}
@@ -38,8 +40,8 @@ class Caesar(Algorithm):
     def transform_params(self, params):
         params['shift'] = int(params['shift'])
 
-    def check_secure(self, action=None):
-        if self.params['shift'] == 0:
+    def check_secure(self, params, action=None):
+        if params['shift'] == 0:
             return False, '"shift" cannot be zero'
         return True, None
 
