@@ -31,7 +31,6 @@ import os
 from hashlib import pbkdf2_hmac
 from Crypto.Cipher import AES
 from Crypto.Util import Counter
-from Crypto import Random
 
 from .common import Algorithm
 
@@ -129,6 +128,8 @@ class Aes(Algorithm):
         ctr = Counter.new(AES.block_size * 8, initial_value=self.iv_int)
         key = derive_key_from_pwd(params['password'], self.salt)
         aes = AES.new(key, AES.MODE_CTR, counter=ctr)
+        if isinstance(content, str):
+            content = content.encode()
         encoded = aes.encrypt(content)
         return encoded
 

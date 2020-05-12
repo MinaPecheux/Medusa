@@ -50,3 +50,15 @@ class TestAlgo():
 
         assert decoded == text
         assert encoded != text
+
+    def test_rsa(self):
+        text = 'hello world'
+
+        processor = Medusa(algo='rsa', params={})
+        encoded = processor.encode(text)
+        ctx = processor.get_context()
+
+        decoded = processor.decode(encoded, n=ctx['n'], e=ctx['e'], d=ctx['d'])
+
+        assert decoded == text
+        assert encoded != text
