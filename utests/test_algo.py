@@ -27,3 +27,16 @@ class TestAlgo():
 
         decoded = processor.decode(encoded)
         assert decoded == text
+
+    def test_aes(self):
+        text = 'hello world'
+
+        processor = Medusa(algo='aes',
+                           params=dict(password='password'))
+        encoded = processor.encode(text)
+        ctx = processor.get_context()
+
+        decoded = processor.decode(encoded, iv=ctx['iv'], salt=ctx['salt'])
+
+        assert decoded == text
+        assert encoded != text
