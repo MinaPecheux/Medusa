@@ -33,6 +33,7 @@ import os
 import shutil
 import sys
 from time import sleep
+from tqdm import tqdm
 
 from .algorithms import ALGORITHMS
 
@@ -133,10 +134,16 @@ class Medusa(object):
                 return False
         return True
 
+    def _print_context(self):
+        '''Prints the current context of the used algorithm (auto-generated keys, offsets...).'''
+        for k, v in self.algo.ctx.items():
+            print('[{:>6}] {}'.format(k.title().replace('_', ' '), v))
+
     def _wrap_processor(self, func, action):
         '''Wraps a processing function with auto check of params, auto update of
         params with object-specific values...'''
         def _wrapped(content, **kwargs):
+            __is_direct = kwargs.pop('__is_direct', True)
             if not self._check_missing_params(action=action):
                 return
             if not self._check_secure_params(action=action):
@@ -148,8 +155,8 @@ class Medusa(object):
             if action == 'decode' and not isinstance(res, str):
                 res = res.decode()
 
-            for k, v in self.algo.ctx.items():
-                print('[{:>6}] {}'.format(k.title().replace('_', ' '), v))
+            if __is_direct and action == 'encode':
+                self._print_context()
             return res
         return _wrapped
 
@@ -187,9 +194,9 @@ class Medusa(object):
 
         # process
         if action == 'encode':
-            res = self.encode(content)
+            res = self.encode(content, __is_direct=False)
         elif action == 'decode':
-            res = self.decode(content)
+            res = self.decode(content, __is_direct=False)
 
         # write encoded file
         if isinstance(res, str):
@@ -265,23 +272,14 @@ class Medusa(object):
         files = [f for f in os.listdir(input_path)]
 
         # go through files in directory
-        for f in files:
+        it = tqdm(files) if indent == 0 else files
+        print('{}{} "{}"'.format(ind, 'Encrypting' if action == 'encode' else 'Decrypting',
+                                 dir_name))
+        for f in it:
             if f.startswith('.') or f in self.exclude:
                 if self.verbose:
                     print(ind + 'Ignoring:', f)
                 continue
-
-            if action == 'encode':
-                sys.stdout.write('\r{}Encrypting "{}" ({}/{})'.format(ind, dir_name,
-                                                                      files.index(
-                                                                          f) + 1,
-                                                                      len(files)))
-            else:
-                sys.stdout.write('\r{}Decrypting "{}" ({}/{})'.format(ind, dir_name,
-                                                                      files.index(
-                                                                          f) + 1,
-                                                                      len(files)))
-            sys.stdout.flush()
 
             # read input file
             ipath = os.path.abspath(os.path.join(input_path, f))
@@ -358,6 +356,10 @@ class Medusa(object):
                 if self.verbose:
                     print('\nZipping encrypted directory.')
                 shutil.make_archive(output_path, 'zip', output_path)
+
+        if args['action'] == 'encode':
+            print('')
+            self._print_context()
 
 
 def input_params(algo, action):

@@ -3,3 +3,4 @@ pre-commit==2.2.0
 pycodestyle==2.5.0
 pycrypto==2.6.1
 pyflakes==2.1.1
+tqdm==4.46.0
