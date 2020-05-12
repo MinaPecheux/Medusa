@@ -25,6 +25,4 @@
 
 from setuptools import setup, find_packages
 
-dependencies = ['pycryptodome==3.9.7',
-                'tqdm==4.46.0']
 setup(packages=find_packages())
