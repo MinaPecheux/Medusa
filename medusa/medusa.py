@@ -384,19 +384,21 @@ def parse_args(args):
 
 def input_params(algo, action):
     params = dict()
-    print(ShellColors.BLUE + '[Medusa] Set params:')
     ref_params = ALGORITHMS[algo].get_params()
     req_params = ref_params.get('common', {}).get('required', []) + \
         ref_params.get(action, {}).get('required', [])
-    for param in req_params:
-        prompt = '>> {}: '.format(param.title().replace('_', ' '))
-        tmp = getpass.getpass(prompt=prompt)
-        params[param] = tmp
-    print(ShellColors.ENDC)
+
+    if len(req_params) > 0:
+        print(ShellColors.BLUE + '[Medusa] Set params:')
+        for param in req_params:
+            prompt = '>> {}: '.format(param.title().replace('_', ' '))
+            tmp = getpass.getpass(prompt=prompt)
+            params[param] = tmp
+        print(ShellColors.ENDC)
     return params
 
 
-def main(**args):
+def main(return_args=False, **args):
     if len(args) == 0:
         parser = argparse.ArgumentParser()
         subparsers = parser.add_subparsers()
@@ -500,4 +502,5 @@ def main(**args):
     if args['verbose']:
         print('-------------------------------------\n' + ShellColors.ENDC)
 
-    return args
+    if return_args:
+        return args

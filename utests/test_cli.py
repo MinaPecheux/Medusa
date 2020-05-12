@@ -96,9 +96,11 @@ class TestCLI():
         config_path = os.path.join(os.path.dirname(__file__), '.medusa')
 
         with MockedGetpass('1'):
-            args_encode = medusa(config=config_path, action='encode')
+            args_encode = medusa(config=config_path, action='encode',
+                                 return_args=True)
         with MockedGetpass('1'):
-            args_decode = medusa(config=config_path, action='decode')
+            args_decode = medusa(config=config_path, action='decode',
+                                 return_args=True)
 
         input_path = os.path.join(
             os.path.dirname(__file__), args_encode['input'])
