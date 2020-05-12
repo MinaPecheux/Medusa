@@ -1,13 +1,24 @@
-from medusa import Medusa
+import pytest
+
+from medusa import Medusa, MedusaError
 
 
 class TestAlgo():
 
+    def test_missing_param(self):
+        with pytest.raises(MedusaError):
+            _ = Medusa(algo='caesar', params={},
+                       exit_on_error=False)
+
+    def test_unsecure_param(self):
+        with pytest.raises(MedusaError):
+            _ = Medusa(algo='caesar', params=dict(shift=0),
+                       exit_on_error=False)
+
     def test_caesar(self):
         text = 'hello world'
 
-        processor = Medusa(algo='caesar',
-                           params=dict(shift=1))
+        processor = Medusa(algo='caesar', params=dict(shift=1))
         encoded = processor.encode(text)
 
         assert encoded == 'ifmmp!xpsme'
@@ -19,8 +30,7 @@ class TestAlgo():
         text = 'hello world'
 
         processor = Medusa(algo='vigenere',
-                           params=dict(key='key',
-                                       complement_key='complement_key'))
+                           params=dict(key='key', complement_key='complement_key'))
         encoded = processor.encode(text)
 
         assert encoded == 'ÓÐ×ÑèÜèÝ×Ý'

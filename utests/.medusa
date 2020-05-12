@@ -1,9 +1,9 @@
 [encode]
 input = data/input.txt
-output = data/output.txt
+output = output/output.txt
 algo = vigenere
 
 [decode]
-input = data/output.txt
-output = data/new.txt
+input = output/output.txt
+output = output/new.txt
 algo = vigenere
