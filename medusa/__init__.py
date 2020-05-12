@@ -26,7 +26,10 @@
 __author__ = 'Mina Pêcheux'
 __copyright__ = 'Copyright 2020, Mina Pêcheux'
 
-from .medusa import Medusa, main as medusa
+from .medusa import (Medusa,
+                     MedusaError,
+                     main as medusa)
 
 __all__ = ['Medusa',
+           'MedusaError',
            'medusa']

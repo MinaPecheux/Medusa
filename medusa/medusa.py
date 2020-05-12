@@ -48,26 +48,8 @@ class ShellColors(object):
     UNDERLINE = '\033[4m'
 
 
-def parse_args(args):
-    if args.decode:
-        action = 'decode'
-    elif args.encode:
-        action = 'encode'
-
-    if 'config_file' in args:
-        config = load_config(args.config_file)[action]
-        config['action'] = action
-    else:
-        config = dict(
-            algo=args.algo,
-            input=args.input,
-            output=args.output,
-            action=action,
-            exclude=args.exclude,
-            zip=args.zip,
-            verbose=args.verbose
-        )
-    return config
+class MedusaError(Exception):
+    pass
 
 
 class Medusa(object):
@@ -99,9 +81,9 @@ class Medusa(object):
         self.exit_on_error = exit_on_error
 
         if not self._check_missing_params(self.params):
-            return
+            raise MedusaError()
         if not self._check_secure_params(self.params):
-            return
+            raise MedusaError()
 
         self.encode = self._wrap_processor(self.algo.encode, 'encode')
         self.decode = self._wrap_processor(self.algo.decode, 'decode')
@@ -153,9 +135,9 @@ class Medusa(object):
             params = self.params.copy()
             params.update(kwargs)
             if not self._check_missing_params(params, action=action):
-                return
+                raise MedusaError()
             if not self._check_secure_params(params, action=action):
-                return
+                raise MedusaError()
             self.algo.transform_params(params)
             res = func(content, params)
             if action == 'decode' and not isinstance(res, str):
@@ -376,6 +358,28 @@ class Medusa(object):
         if args['action'] == 'encode':
             print('')
             self._print_context()
+
+
+def parse_args(args):
+    if args.decode:
+        action = 'decode'
+    elif args.encode:
+        action = 'encode'
+
+    if 'config_file' in args:
+        config = load_config(args.config_file)[action]
+        config['action'] = action
+    else:
+        config = dict(
+            algo=args.algo,
+            input=args.input,
+            output=args.output,
+            action=action,
+            exclude=args.exclude,
+            zip=args.zip,
+            verbose=args.verbose
+        )
+    return config
 
 
 def input_params(algo, action):
