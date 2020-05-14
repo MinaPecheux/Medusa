@@ -73,6 +73,16 @@ class Medusa(object):
         exit_on_error : bool, optional
             Whether or not to sys exit if object could not be instantiated (true by default).
         '''
+        if algo not in ALGORITHMS:
+            print('Unknown algorithm: "{}"'.format(algo))
+            print('Available ciphers:')
+            for a in ALGORITHMS:
+                print('- {}'.format(a))
+            if exit_on_error:
+                sys.exit(1)
+            else:
+                raise MedusaError()
+
         self.algo = ALGORITHMS[algo]()
         self.algo_params = ALGORITHMS[algo].get_params()
         self.params = params

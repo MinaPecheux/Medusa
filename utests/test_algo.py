@@ -15,6 +15,11 @@ class TestAlgo():
             _ = Medusa(algo='caesar', params=dict(shift=0),
                        exit_on_error=False)
 
+    def test_unknown_algo(self):
+        with pytest.raises(MedusaError):
+            _ = Medusa(algo='gloubi', params={},
+                       exit_on_error=False)
+
     def test_caesar(self):
         text = 'hello world'
 
