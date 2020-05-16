@@ -1,6 +1,6 @@
 # Medusa
 
-The Mini Encoding/Decoding Utility with Simple Algorithms (Medusa) is a small Python lib to easily cypher and decypher files or directories using basic cryptography algorithms.
+The Mini Encoding/Decoding Utility with Simple Algorithms (Medusa) is a small Python lib to easily cipher and decipher files or directories using basic cryptography algorithms.
 
 <div style="text-align: center;">
 <img src="imgs/logo.png" alt="logo.png" width="150" height="150" />
@@ -16,7 +16,7 @@ For now, Medusa offers 4 encoding/decoding algorithms:
 - the [Rivest-Shamir-Adleman (RSA)](https://en.wikipedia.org/wiki/RSA_(cryptosystem)) algorithm: an asymmetric
   cipher with a public and a private key
 
-_Note: to make it harder to decypher, Medusa uses a wide range of characters including Unicode characters... so it requires Python 3 to work._
+_Note: to make it harder to decipher, Medusa uses a wide range of characters including Unicode characters... so it requires Python 3 to work._
 
 ## Install
 
